@@ -1,0 +1,837 @@
+pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
+                            shiny_input=FALSE, progress=FALSE){
+    
+    # Detech number of cores for parallel processing
+    numCores <- detectCores()
+    
+    if(shiny_input){
+      # Using regex to find all PubMed IDs in input boxes and convert to lists 
+      # - only used when the input is giving through the Shiny app
+      if(!(is.integer(pmidPositive) & is.integer(pmidNegative) & is.integer(pmidTBD))){
+        pmidPositive <- str_match_all(pmidPositive, "\\d+")
+        pmidNegative <- str_match_all(pmidNegative, "\\d+")
+        pmidTBD <- str_match_all(pmidTBD, "\\d+")
+      }
+    }
+    
+    # Storing PMIDs and class in dataframes
+    indexPos <- as.data.frame(pmidPositive)
+    indexPos$class <- 1
+    names(indexPos) <- c("pmid", "class")
+    
+    indexNeg <- as.data.frame(pmidNegative)
+    indexNeg$class <- 0
+    names(indexNeg) <- c("pmid", "class")
+    
+    indexTBD <- as.data.frame(pmidTBD)
+    indexTBD$class <- 2
+    names(indexTBD) <- c("pmid", "class")
+    
+    # Combine index dataframes and order by pmid
+    index <- do.call("rbind", list(indexPos, indexNeg, indexTBD))
+    
+    # Function for retrieving all of the information from PubMed based
+    # on the listed PMIDs
+    retrieve_pubmed <- function(x){
+        
+        # Making query and splitting it up into groups depending on number of cores. 
+        split_query <- split(x, f = factor(seq(1,numCores)))
+        my_query_pl <- lapply(1:numCores, function(i) paste(split_query[[i]], 
+                                                            collapse = " "))
+        
+        # Creating enterz-object with info about fx WebEnv - multicore version
+        my_entrez_id_pl <- lapply(my_query_pl, get_pubmed_ids)
+        
+        # Fetch xml file from all of the given PudMed IDs - multicore version
+        my_abstracts_xml_pl <- mclapply(my_entrez_id_pl, fetch_pubmed_data, 
+                                        mc.cores = numCores)
+        
+        # Convert back to a single character string
+        my_abstracts_xml <- toString(my_abstracts_xml_pl)
+        
+        # Store Pubmed Records as elements of a list
+        all_xml <- articles_to_list(my_abstracts_xml)
+        
+        mclapply_df <- data.frame()
+        trial <- 1:10
+        for(i in trial){
+          # Starting time: record
+          t.start <- Sys.time()
+          # Perform operation (using mclapply here (example is with lapply), 
+          # no further parameters)
+          final_df <- do.call(rbind, mclapply(all_xml, article_to_df, 
+                                              max_chars = -1, getAuthors = FALSE, 
+                                              mc.cores = numCores))
+          
+          # Final time: record
+          t.stop <- Sys.time()
+          
+          # How long did it take?
+          mclapply_df <- rbind(mclapply_df, t.stop - t.start)
+        }
+        mclapply_df <- data.frame(cbind(trial, mclapply_df[[1]]))
+        names(mclapply_df) <- c("trial", "time")
+        
+        mclapply_df %>% 
+          ggplot(aes(x=trial, y=time)) +
+          geom_point() +
+          geom_line() +
+          scale_x_continuous(breaks = trial)
+        
+        
+        foreach_df <- data.frame()
+        
+        for(i in trial){
+          # Starting time: record
+          t.start <- Sys.time()
+          
+          # Start a cluster with 3 cores
+          cl <- makeCluster(4)
+          registerDoParallel(cl)
+          
+          # Perform operation (use foreach)
+          # The .combine argument guides result aggregation
+          fullDF <- tryCatch(
+            {foreach(x=all_xml, 
+                     .packages = 'easyPubMed',
+                     .combine = rbind) %dopar% article_to_df(pubmedArticle = x, 
+                                                             autofill = T, 
+                                                             max_chars = -1, 
+                                                             getKeywords = F, 
+                                                             getAuthors = F)}, 
+            error = function(e) {NULL},
+            finally = {stopCluster(cl)})
+          
+          # Final time: record
+          t.stop <- Sys.time()
+          
+          # How long did it take?
+          foreach_df <- rbind(foreach_df, t.stop - t.start)
+        }
+        foreach_df <- data.frame(cbind(trial, foreach_df[[1]]))
+        names(foreach_df) <- c("trial", "time")
+        
+        foreach_df %>% 
+          ggplot(aes(x=trial, y=time)) +
+          geom_point() +
+          geom_line() +
+          scale_x_continuous(breaks = trial)
+
+        
+        return(final_df)
+    }
+    
+    # Total number of articles
+    total <- length(index$pmid)
+    retreived <- 0
+    articles <- 100
+    
+    if(progress){
+      # Increment the progress bar, and update the detail text.
+      incProgress(amount=0, 
+                  detail = paste(retreived, " out of ", total))
+    }
+    
+    # If the number of PMIDs are greater than 1300, the retrievel from PubMed is 
+    # splitted into several subprocesses, since I (Mikkel) have encountered issues, 
+    # when the datasetes are too big.
+    start_time <- Sys.time()
+    if(length(index$pmid) > 1000){
+      
+      # Splitting of the PMIDs into dataframes with 100 PMIDs 
+      sub_split <- total/articles
+      splitted_data <- split(index, f = factor(seq(1, sub_split)))
+        
+      # Initializing the final dataframe
+      final_df <- data.frame()
+        
+      # Looping over the splitted dataframes
+      for(i in splitted_data){
+        temp_df <- retrieve_pubmed(i[["pmid"]])
+        final_df <- rbind(final_df, temp_df)
+        
+        retreived <- length(final_df$pmid)
+        print(retreived)
+        
+        if(progress){
+          # Increment the progress bar, and update the detail text.
+          incProgress(amount=articles/total, 
+                      detail=paste(retreived, " out of ", total))
+        }
+      }
+      end_time <- Sys.time()
+      print(end_time - start_time)
+        
+    } else {
+
+      # If the number of PMIDs are less than 1000, the normal process is run
+      final_df <- retrieve_pubmed(index[["pmid"]])
+      
+      end_time <- Sys.time()
+      print(end_time - start_time)
+
+    }
+    
+    if(verbose){
+        frac_retrieved <- sum(final_df$pmid %in% index$pmid)/length(index$pmid)
+        print(paste0("Procent of PubMed articles retrieved: ", 
+                     round(frac_retrieved, 4)*100, "%"))
+    }
+    
+    # Filter the index dataframe based on the articles it was possible to 
+    # retrieve from PubMed
+    index <- filter(index, index$pmid %in% final_df$pmid)
+    
+    final_df <- final_df %>% 
+       dplyr::select(pmid, year, title, abstract)
+    
+    # If abstracts are missing on PubMed, find out which pmids are associated 
+    # with these
+    missing_pmids <- final_df %>% 
+        group_by(pmid) %>% 
+        filter(all(is.na(abstract))) %>% 
+        pull(pmid)
+    
+    # Filter final_df, index and info based on the pmids for articles
+    # with missing abstracts 
+    final_df <- filter(final_df, !(pmid %in% missing_pmids))
+    if(verbose){
+      frac_retrieved <- sum(final_df$pmid %in% index$pmid)/length(index$pmid)
+      print(paste0("Procent of PubMed articles with abstract: ", 
+                   round(frac_retrieved, 4)*100, "%"))
+    }
+    index <- filter(index, !(pmid %in% missing_pmids))
+    
+    # Join information retreived from PubMed with class labels
+    index$pmid <- as.character(index$pmid)
+    final_df <- final_df %>% 
+       inner_join(., index, by='pmid')
+    
+    return(final_df)
+}
+
+
+split_data <- function(data){
+    
+   # Create data frame with train data and remove articles with 
+   # missing PMID or abstract and set class labels
+   df_train <- data[data$class < 2, ] %>% 
+      drop_na(pmid) %>% 
+      filter(!is.na(abstract)) %>% 
+      mutate(class = factor(if_else(class == 1, "Positive", "Negative"),
+                            levels = c("Positive", "Negative")))
+   
+   # Create data with test data and remove articles with missing PMID or abstract
+   df_test <- data[data$class == 2, ] %>% 
+      drop_na(pmid) %>% 
+      filter(!is.na(abstract))
+
+   out <- list()
+   
+   out$train_data <- df_train
+   out$test_data <- df_test
+   
+   return(out)
+}
+
+train_classifiers <- function(train_data, eval_metric, verbose=FALSE, 
+                              fit_all=FALSE, seed_num=123,
+                              models=c("bag_tree", "xgboost", "c5", 
+                                       "dt", "fdm","ldm", "logit", "mars","nnet", 
+                                       "mr", "nb", "knn", "rf", "svm_rbf")){ 
+    
+   # Creating recipe and specifying outcome and predictors and setting pmids as 
+   # id variable. Preprocessing steps are also determined here. 
+   train_data <- train_data[, c('pmid', 'abstract', 'class')]
+   train_rec <-
+        recipe(class ~ ., data = train_data) %>% 
+        update_role(pmid, new_role = "id") %>% 
+        step_tokenize(abstract) %>% 
+        step_stopwords(abstract) %>%
+        step_stem(abstract) %>%
+        step_tokenfilter(abstract, max_tokens = 500) %>%
+        step_tfidf(abstract)
+    
+    # Setting up Bagged MARS Model
+    bag_mars_spec <- bag_mars() %>%
+        set_engine("earth") %>%
+        set_mode("classification")
+    
+    # Setting up Bagged Decision Tree Model
+    bag_tree_spec <- bag_tree() %>%
+        set_engine("rpart") %>%
+        set_mode("classification")
+    
+    # Setting up Boosted Trees (the XGboost model)
+    xgboost_spec <- boost_tree() %>% 
+        set_engine("xgboost") %>% 
+        set_mode("classification")
+    
+    # Setting up C5.0 Rule-Based Classification Model
+    c5_spec <- C5_rules() %>% 
+        set_engine("C5.0") %>% 
+        set_mode("classification")
+    
+    # Setting up Decision Tree Model
+    dt_spec <- decision_tree() %>% 
+        set_engine("C5.0") %>% 
+        set_mode("classification")
+    
+    # Setting up Flexible Discriminant Model
+    fdm_spec <- discrim_flexible() %>% 
+        set_engine("earth") %>% 
+        set_mode("classification")
+    
+    # Setting up Linear Discriminant Model
+    ldm_spec <- discrim_linear() %>% 
+        set_engine("MASS") %>% 
+        set_mode("classification")
+    
+    # # Setting up Regularized Discriminant Model
+    # rdm_spec <- discrim_regularized(frac_common_cov=0, frac_identity=0.25) %>%
+    #     set_engine("klaR") %>%
+    #     set_mode("classification")
+    
+    # Setting up the Logistic Regression Model
+    logit_spec <- logistic_reg(penalty = 0.1, mixture = 1) %>%
+        set_engine("glmnet") %>% 
+        set_mode("classification")
+    
+    # Setting up MARS
+    mars_spec <- parsnip::mars() %>% 
+        set_engine("earth") %>% 
+        set_mode("classification")
+    
+    # Setting up the Single Layer Neural Network (NNET model)
+    nnet_spec <- mlp(epochs = 100, hidden_units = 5, dropout = 0.1) %>%
+        set_engine("keras", verbose = 0) %>%
+        set_mode("classification")
+    
+    # Setting up Multinomial Regression Model
+    mr_spec <- multinom_reg() %>% 
+        set_engine("keras", verbose = 0) %>% 
+        set_mode("classification")
+    
+    # Setting up the Naive Bayes model
+    nb_spec <- naive_Bayes(Laplace = 1) %>%
+        set_engine("naivebayes") %>% 
+        set_mode("classification")
+    
+    # Setting up the KNN model
+    knn_spec <- nearest_neighbor() %>% 
+        set_engine("kknn") %>% 
+        set_mode("classification")
+    
+    # Setting up the RF model
+    rf_spec <- rand_forest(trees = 1000) %>%
+        set_engine("ranger") %>%
+        set_mode("classification")
+    
+    # Setting up the RF model for parameter tuning
+    rf_tune_spec <- rand_forest(mtry=tune(),
+                                trees = 1000,
+                                min_n =  tune()) %>%
+      set_engine("ranger") %>%
+      set_mode("classification")
+    
+    # Setting up RuleFit Models
+    rule_spec <- rule_fit() %>% 
+        set_engine("xrf") %>% 
+        set_mode("classification")
+    
+    # # Setting up General interface for polynomial support vector machines (SVM)
+    # svm_poly_spec <- svm_poly() %>% 
+    #     set_engine("kernlab") %>% 
+    #     set_mode("classification")
+     
+    # Setting up the General interface for radial basis function support vector machines (SVM) model
+    svm_rbf_spec <- svm_rbf(cost = 0.5) %>%
+        set_engine("kernlab") %>%
+        set_mode("classification")
+    
+    # List with all of the model specifications
+    model_specs <- list(bag_mars = bag_mars_spec, bag_tree = bag_tree_spec,
+                        xgboost = xgboost_spec, c5 = c5_spec, dt = dt_spec,
+                        fdm = fdm_spec, ldm = ldm_spec,
+                        logit = logit_spec, mars = mars_spec, nnet = nnet_spec,
+                        mr = mr_spec, nb = nb_spec,knn = knn_spec, rf = rf_spec,
+                        rule = rule_spec,
+                        svm_rbf = svm_rbf_spec)
+    selected_model_specs <- model_specs[names(model_specs) %in% models]
+    
+    # Evaluating model proformance with 10-fold cross-validation resampling
+    set.seed(seed_num)
+    train_folds <- vfold_cv(train_data, v = 10, repeats = 1)
+    
+    # Training the models using workflow set
+    # Set up workflow where the train recipe is applied to every model specified
+    train_models <- 
+        workflow_set(
+            preproc = list(base = train_rec),
+            models = selected_model_specs,
+            cross = TRUE
+        )
+    
+    # Allow parallel processing
+    numCores <- detectCores()
+    registerDoMC(cores = numCores)
+    
+    # Evaluation metrics
+    metrics = metric_set(roc_auc, sens, spec, accuracy, precision)
+    
+    # Train all the models by mapping the fit_resamples function to every 
+    # training workflow
+    train_models <- train_models %>%
+        workflow_map("fit_resamples", resamples = train_folds, 
+                     metrics = metrics, 
+                     verbose = TRUE, 
+                     control=control_resamples(save_pred = TRUE))
+    
+    # Evaluation
+    # Create a tibble with model results, specs and respective names
+    models <- tibble(model = train_models$result,
+                     model_spec = selected_model_specs,
+                     model_name = models)
+    
+    # Create a helper function for collecting the metrics 
+    map_collect_metrics <- function(model){
+        model %>% 
+            dplyr::select(id, .metrics) %>% 
+            unnest(.metrics)
+    }
+    
+    # Apply helper function and extract the metrics 
+    model_metrics <- models %>% 
+        mutate(res = map(model, map_collect_metrics)) %>% 
+        dplyr::select(model_name, res) %>% 
+        unnest(res)
+    
+    # Create a helper function for collecting the predictions 
+    map_collect_predictions <- function(model){
+        model %>% 
+            dplyr::select(id, .predictions) %>% 
+            unnest(.predictions)
+    }
+    
+    # Apply helper function and extract the predictions 
+    model_predictions <- models %>% 
+        mutate(res = map(model, map_collect_predictions)) %>% 
+        dplyr::select(model_name, res) %>% 
+        unnest(res)
+    
+    # Selecting the best model
+    models_summary <- model_metrics %>% 
+        group_by(model_name, .metric) %>% 
+        dplyr::summarise(mean = mean(.estimate), .groups='drop') %>% 
+        filter(.metric == eval_metric) 
+    
+    # Determine which model preformed the best
+    bestclassifier <- models_summary$model_name[which.max(models_summary$mean)]
+    
+    # # Tune the best classifier (which is the random forest)
+    # tune_wf <- workflow() %>% 
+    #   add_recipe(train_rec) %>% 
+    #   add_model(rf_tune_spec)
+    # 
+    # # train_folds <- vfold_cv(train, v = 10, repeats = 1)
+    # 
+    # rf_grid <- grid_regular(
+    #   mtry(range = c(20, 40)),
+    #   min_n(range = c(2, 10)),
+    #   levels = 5
+    # )
+    # 
+    # doParallel::registerDoParallel()
+    # set.seed(seed_num+123)
+    # tune_regular_res <- tune_grid(
+    #   tune_wf,
+    #   resamples = train_folds,
+    #   grid = rf_grid,
+    #   control = control_grid(verbose = TRUE)
+    # )
+    # 
+    # # Create plot of tuning results
+    # tune_regular_res %>% 
+    #   collect_metrics() %>% 
+    #   filter(.metric == "roc_auc") %>% 
+    #   mutate(min_n = factor(min_n)) %>% 
+    #   ggplot(aes(mtry, mean, color=min_n)) + 
+    #   geom_line(alpha = 0.5, size = 1.5) + 
+    #   geom_point()
+    # 
+    # best_auc <- select_best(tune_regular_res, "roc_auc")
+    # final_rf <- finalize_model(
+    #   rf_tune_spec,
+    #   best_auc
+    # )
+    # 
+    # train_prep <- prep(train_rec)
+    # 
+    # library(vip)
+    # final_rf %>%
+    #   set_engine("ranger", importance = "permutation") %>%
+    #   fit(class ~ .,
+    #       data = juice(train_prep) %>% select(-pmid)
+    #   ) %>%
+    #   vip()
+    # 
+    # final_wf <- workflow() %>%
+    #   add_recipe(train_rec) %>%
+    #   add_model(final_rf)
+    # 
+    # final_res <- final_wf %>%
+    #   last_fit(training_split)
+    # 
+    # final_res %>%
+    #   collect_metrics()
+    
+    # Create mapping for printing results
+    metrics_map <- data.frame(
+        abbreviation = c("roc_auc", "sens", "spec", "accuracy", "precision"),
+        metric = c("AUC", "Sensitivity", "Specificity", "Accuracy", 
+                   "Precision")
+    )
+    
+    # Print the name of the best classifier, metric used and value
+    if(verbose){
+        metric <- metrics_map[metrics_map$abbreviation == eval_metric, ]$metric
+        value <- models_summary[models_summary$model_name == bestclassifier,]$mean
+        print(paste("Comparing the models using the metric:", metric))
+        print(paste("The best classifier was:", bestclassifier))
+        print(paste("Performance:", metric, "=", round(value, 4)))
+    }
+    
+    # Select the final model's specifications
+    final_model_spec <- models[models$model_name == bestclassifier, 
+    ][["model_spec"]][[bestclassifier]]
+    
+    # Specify the final workflow
+    final_wf <- workflow() %>%
+        add_recipe(train_rec) %>% 
+        add_model(final_model_spec)
+    
+    # Fit the final model to the whole training dataset
+    best_model_fit <- fit(final_wf, data = train_data)
+    
+    # final_model_spec %>%
+    #   set_engine("ranger", importance = "permutation") %>%
+    #   fit(class ~ .,
+    #       data = juice(train_prep) %>% select(-pmid)
+    #   ) %>%
+    #   vip()
+
+    # final_wf <- workflow() %>%
+    #   add_recipe(train_rec) %>%
+    #   add_model(best_model_fit)
+
+    # final_res <- final_wf %>%
+    #   last_fit(training_split)
+    # 
+    # final_res %>%
+    #   collect_metrics()
+    
+    # Create list to store return objects
+    out <- list()
+    
+    out$model_metrics <- model_metrics
+    out$model_predictions <- model_predictions
+    out$best_model <- best_model_fit
+    
+    model_fits <- list()
+    # In order to compare the performance of all the models on the training data
+    if(fit_all){
+       for(model in models$model_name){
+         
+         # Extract the model specification
+         model_spec <- models[models$model_name == model, 
+                               ][["model_spec"]][[model]]
+          
+         # Specify the workflow object for each model
+         wf <- workflow() %>%
+            add_recipe(train_rec) %>%
+            add_model(model_spec)
+         
+         # Fit the model on the whole training dataset and save the fitted model
+         model_fit <- fit(wf, data = train_data)
+         model_fits[[model]] <- model_fit
+
+       }
+       out$fitted_models <- model_fits
+    } else {
+      model_fits <- list()
+      model_fits[[bestclassifier]] <- best_model_fit
+      out$fitted_models <- model_fits
+    }
+    
+    return(out)
+}
+
+classifier_predict <- function(final_model_fit, test_data){
+    
+   # Predict classes for the test data and the related probabilities
+   pred <- bind_cols(test_data,
+      predict(final_model_fit, new_data = test_data[, c('pmid', 'abstract')]),
+      predict(final_model_fit, new_data = test_data[, c('pmid', 'abstract')], 
+              type = "prob")
+   )
+   
+   # Create hyperlinks to articles, collect in a dataframe and specify the 
+   # column names. Not using links to PubMed for IEDB use. 
+   articles <- paste("<a href=", "\"http://www.ncbi.nlm.nih.gov/pubmed/", 
+                   test_data$pmid,"\", target=\"_blank\">", test_data$title, 
+                   "</a>", sep="")
+   
+   results <- cbind(articles, 
+                  as.vector(test_data$year), 
+                  pred$.pred_class, 
+                  pred$.pred_Positive,
+                  as.vector(test_data$pmid))
+   
+   colnames(results) <- c("Article", 
+                        "Year of publication", 
+                        "Label", 
+                        "Rank of article (ordered by probability of correct classification)", 
+                        "PMID")
+   
+   # Select the artcles classified as positive and rank by highest probability
+   positive <- results[as.numeric(results[,3]) == 1,]
+   positive <- positive[order(as.numeric(as.character(positive[,4])), 
+                            decreasing = TRUE), ]
+   
+   # Select the artcles classified as positive and rank by highest probability
+   negative <- results[as.numeric(results[,3]) == 2,]
+   negative <- negative[order(as.numeric(as.character(negative[,4])), 
+                            decreasing = TRUE), ]
+   
+   # Collet the positive and negative results in a dataframe and specify the 
+   # order of rank    
+   ranked_results <- rbind(positive, negative)
+   ranked_results <- as.data.frame(ranked_results)
+   ranked_results[, 4] <- c(1:length(rownames(ranked_results)))
+   ranked_results <- ranked_results %>% 
+     mutate(Label = if_else(Label == 1, "Positive", "Negative"))
+   
+   out <- list()
+   
+   out$pred <- pred
+   out$model <- final_model_fit
+   out$ranked_results <- ranked_results
+   
+   return(out)
+    
+}
+
+# Wrapper function for training and predicting in one go
+classify_articles <- function(data_separated){
+  
+  # Splitting the PMIDs into training and testing data
+  training_data <- tibble(data_separated$train_data)
+  testing_data <- tibble(data_separated$test_data)
+  
+  sum(training_data$class == 'Positive')
+  sum(training_data$class == 'Negative')
+  dim(testing_data)
+  
+  # Training the classifiers and select the best classifier based on specified 
+  # metric
+  training_results <- train_classifiers(train_data = training_data, 
+                                        eval_metric="roc_auc", 
+                                        verbose=TRUE, fit_all=FALSE,
+                                        models=c("xgboost", 
+                                                 "dt", "fdm", "logit", "mars",
+                                                 "nnet", 
+                                                 "mr","knn", "rf", "svm_rbf"))
+  
+  # Select best model
+  best_model <- training_results$best_model
+  
+  # Predict classes for the test data 
+  prediction_results <- classifier_predict(final_model_fit=best_model, 
+                                           test_data=testing_data)
+  
+  return(prediction_results)
+  
+}
+
+evaluate_models <- function(pred_train=NULL, test_data=NULL, fitted_models=NULL, 
+                            metrics, classes){
+   
+   # Create dataframe for mapping between model abbreviations and names
+   models_map <- data.frame(model_name=c('bag_mars', 'bag_tree', 'xgboost', 
+                                         'c5', 'dt', 'fdm', 'ldm', 
+                                         'logit', 'mars', 'nnet', 'mr', 'nb', 
+                                         'knn', 'rf', 'rule', 
+                                         'svm_rbf'),
+                            Model=c('Bagged MARS', 'Bagged Decision Tree', 
+                                    'Boosted Trees', 'C5.0 Rule-Based', 
+                                    'Decision Tree', 'Flexible Discriminant',
+                                    'Linear Discriminant', 
+                                    'Logistic Regression', 'MARS', 
+                                    'Neural Network', 'Multinomial Regression', 
+                                    'Naive Bayes', 
+                                    'K-Nearest Neighbors', 'Random Forest', 
+                                    'RuleFit',
+                                    'Radial Basis Function SVM'))
+   
+   # Subset mapping table to the trained models
+   models_map <- models_map[models_map$model_name 
+                            %in% unique(names(fitted_models)), ]
+   if(!is.null(pred_train)){
+     # Map from model abbreviations to model names
+     pred_train$Model <- mapvalues(pred_train$model_name, 
+                                   from=models_map$model_name, 
+                                   to=models_map$Model)
+     
+     # Get AUC scores from 10-fold cross-validation
+     auc_metrics <- metrics[metrics$.metric == 'roc_auc', ] %>% 
+        drop_na() %>% 
+        group_by(model_name) %>% 
+        dplyr::summarise(mean_auc = mean(.estimate), .groups='drop') %>% 
+        mutate(label.auc = sprintf("AUC = %.3f", mean_auc))
+     
+     # Map from model abbreviations to model names
+     auc_metrics$Model <- mapvalues(auc_metrics$model_name, 
+                                    from=models_map$model_name, 
+                                    to=models_map$Model)
+     
+     # Generate data for the ROC curves
+     df.roc.train <- pred_train %>% 
+        drop_na() %>% 
+        dplyr::group_by(Model, id) %>% 
+        roc_curve(event_level='first', truth=class, .pred_Positive)
+     
+     
+     # Generate plot of the ROC curves for each model on the training data
+     train_plot <- df.roc.train %>% 
+        ggplot(aes(x=1 - specificity, y=sensitivity)) +
+        geom_path(aes(group=id, colour=Model), alpha = 0.7) +
+        geom_abline(intercept = 0, slope = 1, lty = 3) +
+        facet_wrap(. ~Model) +
+        theme(legend.position="none") +
+        geom_text(data=auc_metrics, x=0.75, y=0.25, size=3, 
+                  aes(label=label.auc), inherit.aes = F) + 
+        labs(title='ROC curves across the 10-fold cross-validation for training data',
+             subtitle='Mean AUC scores across the 10 cross-validation folds')
+     
+     print(train_plot)
+   }
+   
+   # Evaluate all classifiers on test data
+   all_prediction_results <- data.frame()
+   for(model in models_map$model_name){
+      current_results <- classifier_predict(final_model_fit=fitted_models[[model]], 
+                                            test_data=testing_data)$pred
+      current_results$Model <- models_map[models_map$model_name == model, ]$Model
+      all_prediction_results <- rbind(all_prediction_results, current_results)
+   }
+   
+   # Add the true classes
+   all_test_results <- inner_join(all_prediction_results %>% 
+                                     dplyr::select(-one_of('class')), 
+                                  classes, by='pmid')
+   
+   # Calculate the test AUC scores for the all the models
+   all_metrics <- all_test_results %>% 
+      group_by(Model) %>% 
+      roc_auc(event_level='first', truth=class, .pred_Positive) %>% 
+      drop_na() %>% 
+      mutate(label.auc = sprintf("AUC = %.3f", .estimate))
+   
+   # Generate data for the ROC curves
+   df.roc.test <- all_test_results %>% 
+      drop_na() %>% 
+      dplyr::group_by(Model) %>% 
+      roc_curve(event_level='first', truth=class, .pred_Positive)
+   
+   df.roc.test.smooth <- all_test_results %>% 
+      drop_na() %>% 
+      dplyr::group_by(Model) %>% 
+      roc_curve(event_level='first', truth=class, .pred_Positive)
+   
+   # Plot ROC curves for all of the models using the test data
+   test_plot <- df.roc.test %>% 
+      ggplot(aes(x=1 - specificity, y=sensitivity)) +
+      geom_path(aes(colour=Model), alpha = 0.7) +
+      geom_abline(intercept = 0, slope = 1, lty = 3) +
+      facet_wrap(. ~Model) +
+      theme(legend.position="none") +
+      geom_text(data=all_metrics, x=0.75, y=0.25, size=3, 
+                aes(label=label.auc), inherit.aes = F) + 
+      labs(title='ROC curves for the test data',
+           subtitle='AUC scores')
+   print(test_plot)
+   
+
+   # Find the lowest 1 - specificity at the 5% false negative level 
+   # (= 95% sensitivity)
+   df.best.spec <- df.roc.test %>% 
+      group_by(Model) %>% 
+      filter(round(sensitivity, 2) == 0.95) %>% 
+      dplyr::summarise(max_spec = max(specificity)) %>% 
+      mutate(spec.label = sprintf("Specificity = %.3f", max_spec))
+   
+   df.best.spec.smooth <- df.roc.test.smooth[!(df.roc.test.smooth$Model %in% 
+                                                  df.best.spec$Model), ] %>% 
+      group_by(Model) %>% 
+      filter(round(sensitivity, 2) == 0.95) %>% 
+      dplyr::summarise(max_spec = max(specificity)) %>% 
+      mutate(spec.label = sprintf("Specificity = %.3f", max_spec))
+   
+   df.best.spec <- rbind(df.best.spec, df.best.spec.smooth)
+      
+   df.lines <- data.frame(X = c(rep(df.best.spec$max_spec, 2)),
+                          Y = c(rep(0, length(df.best.spec$Model)), 
+                                rep(0.95, length(df.best.spec$Model))))
+   df.lines$Model <- as.factor(rep(df.best.spec$Model, times = 2))
+   
+   # Generate plot of the ROC curves for each model on the test data
+   train_plot_sens_thres <- df.roc.test %>% 
+      ggplot(aes(x=1 - specificity, y=sensitivity)) +
+      geom_path(aes(colour=Model), alpha = 0.7) +
+      geom_abline(intercept = 0, slope = 1, lty = 3) +
+      facet_wrap(. ~Model) +
+      theme(legend.position="none") +
+      geom_text(data=all_metrics, x=0.75, y=0.25, size=3, 
+                aes(label=label.auc), inherit.aes = F) + 
+      labs(title='ROC curves for the test data',
+           subtitle='AUC scores') + 
+      geom_point(data=df.lines, aes(x=1-X, y=Y, group = Model), colour="red") + 
+      geom_line(data=df.lines, aes(x=1-X, y=Y, group = Model), colour = "red", 
+                alpha = 0.5) + 
+      geom_text(data=df.best.spec, x=0.65, y=0.15, size=3, 
+                aes(label=spec.label), inherit.aes = F)
+   
+   print(train_plot_sens_thres)
+   
+   # Generate table with AUC scores and best specificity at 95% sensitivity
+   df.summarized <- df.best.spec %>% 
+      dplyr::select(Model, spec.label) %>% 
+      inner_join(., all_metrics %>% dplyr::select(Model, label.auc), 
+                 by='Model') 
+   
+   DT::datatable(df.summarized,
+                 colnames = c('Model', "Specificity at 95% sensitivity", 
+                              'AUC score'),
+                 rownames = FALSE,
+                 options = list(
+                    columnDefs = list(list(className = 'dt-left', targets = 0:2))
+                 ))
+   
+   selected.models <- c("Random Forest", "Neural Network", 
+                        "Radial Basis Function SVM", "RuleFit", "Naive Bayes", 
+                        "K-Nearest Neighbors")
+   
+   # Generate plot of the ROC curves for each model on the test data
+   df.roc.test.compare <- df.roc.test %>% filter(Model %in% selected.models)
+   all_metrics.compare <- all_metrics %>% filter(Model %in% selected.models)
+   
+   train_plot_compare <- df.roc.test.compare %>% 
+      ggplot(aes(x=1 - specificity, y=sensitivity)) +
+      geom_path(aes(colour=Model), alpha = 0.7) +
+      geom_abline(intercept = 0, slope = 1, lty = 3) +
+      labs(title='Comparison of ROC curves for the 3 best classifiers and the 3 worst classifiers',
+           subtitle = "Classifier performance is assessed by AUC scores")
+   
+   print(train_plot_compare)
+   
+}
