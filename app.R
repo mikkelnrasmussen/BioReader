@@ -39,7 +39,7 @@ ui <- (fluidPage(
   
    titlePanel(
       fluidRow(
-        column(9, h1("BioReader - 1.2"), h4("Biomedical Research Article Distiller")),
+        column(9, h1("BioReader - 1.3"), h4("Biomedical Research Article Distiller")),
          column(3, tags$img(height = 100, width = 65,
                             src = "img/DTU_Logo_Corporate_Red_RGB.png")),
       )
