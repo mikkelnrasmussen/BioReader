@@ -37,42 +37,69 @@ options(spinner.color="#0275D8", spinner.color.background="#ffffff", spinner.siz
 
 ui <- (fluidPage(
   
-   titlePanel(
-      fluidRow(
-        column(9, h1("BioReader - 1.3"), h4("Biomedical Research Article Distiller")),
-         column(3, tags$img(height = 100, width = 65,
-                            src = "img/DTU_Logo_Corporate_Red_RGB.png")),
+  # Title panel with DTU logo
+  titlePanel(
+    fluidRow(
+      column(9, h1("BioReader - 1.3"), 
+             h4("Biomedical Research Article Distiller")),
+      column(3, tags$img(height = 100, width = 65,
+                         src = "img/DTU_Logo_Corporate_Red_RGB.png")),
       )
-   ),
-   mainPanel(
-      tabsetPanel(
-         tabPanel("Submission",
-                  helpText("Do you have a large number of research articles to go through, but do not know where to start?
-                                             BioReader can help you distill your reading list by ranking articles by relevance. 
-                                             Simply collect the PubMed IDs of a number of articles you found relevant and a similar
-                                             number of articles not relevant to you (we recommend at least 20 in each category
-                                             - see Tips and Tricks in instruction for successful classification). These two sets of PubMed
-                                             IDs represent your positive and negative text mining training corpora to be pasted below.
-                                             Then, either paste the PubMed IDs of up to 1000 articles that you would like to have ranked
-                                             according to you content of interest, or enter a PubMed search term, and BioReader will
-                                             provide you with a ranked reading list to limit the time wasted on reading irrelevant
-                                             literature."),
-                  
-                  column(width = 5, offset = 0, style='padding:0px;', wellPanel(
-                     h4("Positive category"),
-                     p("Paste PubMed IDs for papers containing information relevant to you."), 
-                     p("For example", a("Click here.", href = "https://services.healthtech.dtu.dk/services/BioReader-1.2/ex_set1", target="_blank")),
-                     textAreaInput(inputId = "pmidPositive", label = NULL, width = "400px", height = "180px", resize = "none"),
+    ),
+  
+  mainPanel(
+    tabsetPanel(
+      
+      # Primary panel where PubMed IDs can be submitted
+      tabPanel("Submission",
+               helpText("Do you have a large number of research articles to go 
+                        through, but do not know where to start? BioReader can 
+                        help you distill your reading list by ranking articles 
+                        by relevance.  Simply collect the PubMed IDs of a number 
+                        of articles you found relevant and a similar
+                        number of articles not relevant to you (we recommend at 
+                        least 20 in each category - see Tips and Tricks in 
+                        instruction for successful classification). These two 
+                        sets of PubMed IDs represent your positive and negative 
+                        text mining training corpora to be pasted below. Then, 
+                        either paste the PubMed IDs of up to 1000 articles that 
+                        you would like to have ranked according to you content 
+                        of interest, or enter a PubMed search term, and 
+                        BioReader will provide you with a ranked reading list to 
+                        limit the time wasted on reading irrelevant literature."),
+               
+               # Submission boxes for the PubMed IDs
+               column(width = 5, offset = 0, style='padding:0px;', 
+                      wellPanel(
+                        h4("Positive category"),
+                        p("Paste PubMed IDs for papers containing information 
+                          relevant to you."), 
+                        p("For example", 
+                          a("Click here.",
+                            href = paste0("https://services.healthtech.dtu.dk/",
+                                         "services/BioReader-1.2/ex_set1"), 
+                            target="_blank")),
+                        textAreaInput(inputId = "pmidPositive", 
+                                      label = NULL, width = "400px", 
+                                      height = "180px", resize = "none"),
+                        
+                        h4("Negative category"),
+                        p("Paste PubMed IDs for papers similar to the positive 
+                          category, but not containing information relevant to 
+                          you."), 
+                        p("For example", 
+                          a("Click here.", 
+                            href = "https://services.healthtech.dtu.dk/services/BioReader-1.2/ex_set2", 
+                            target="_blank")),
+                        textAreaInput(inputId = "pmidNegative", 
+                                      label = NULL, width = "400px", 
+                                      height = "180px", resize = "none"),
                      
-                     h4("Negative category"),
-                     p("Paste PubMed IDs for papers similar to the positive category, but not containing information relevant to you."), 
-                     p("For example", a("Click here.", href = "https://services.healthtech.dtu.dk/services/BioReader-1.2/ex_set2", target="_blank")),
-                     textAreaInput(inputId = "pmidNegative", label = NULL, width = "400px", height = "180px", resize = "none"),
-                     
-                     h4("Documents to classify"),
-                     p("Paste PubMed IDs (max 1000) for articles that you would like to have classified as either relevant or irrelevant."), 
-                     p("For example", a("Click here.", href = "https://services.healthtech.dtu.dk/services/BioReader-1.2/ex_testset", target="_blank")),
-                     textAreaInput(inputId = "pmidTBD", label = NULL, width = "400px", height = "180px", resize = "none"),
+                        h4("Documents to classify"),
+                        p("Paste PubMed IDs (max 1000) for articles that you would like to have classified as either relevant or irrelevant."), 
+                        p("For example", 
+                          a("Click here.", href = "https://services.healthtech.dtu.dk/services/BioReader-1.2/ex_testset", target="_blank")),
+                        textAreaInput(inputId = "pmidTBD", label = NULL, width = "400px", height = "180px", resize = "none"),
                      
                      actionButton(inputId = "submitPMID", label = "Submit Job"),
                      br()
@@ -194,7 +221,6 @@ server <- function(input, output, session){
 
    output$table <- DT::renderDataTable({
       
-     # pm_data <- pmid_data()
      data_split <- data_splitted()
       
      withProgress({
