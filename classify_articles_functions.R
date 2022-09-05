@@ -51,73 +51,12 @@ pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
         
         # Store Pubmed Records as elements of a list
         all_xml <- articles_to_list(my_abstracts_xml)
-        
-        mclapply_df <- data.frame()
-        trial <- 1:10
-        for(i in trial){
-          # Starting time: record
-          t.start <- Sys.time()
-          # Perform operation (using mclapply here (example is with lapply), 
-          # no further parameters)
-          final_df <- do.call(rbind, mclapply(all_xml, article_to_df, 
-                                              max_chars = -1, getAuthors = FALSE, 
-                                              mc.cores = numCores))
-          
-          # Final time: record
-          t.stop <- Sys.time()
-          
-          # How long did it take?
-          mclapply_df <- rbind(mclapply_df, t.stop - t.start)
-        }
-        mclapply_df <- data.frame(cbind(trial, mclapply_df[[1]]))
-        names(mclapply_df) <- c("trial", "time")
-        
-        mclapply_df %>% 
-          ggplot(aes(x=trial, y=time)) +
-          geom_point() +
-          geom_line() +
-          scale_x_continuous(breaks = trial)
-        
-        
-        foreach_df <- data.frame()
-        
-        for(i in trial){
-          # Starting time: record
-          t.start <- Sys.time()
-          
-          # Start a cluster with 3 cores
-          cl <- makeCluster(4)
-          registerDoParallel(cl)
-          
-          # Perform operation (use foreach)
-          # The .combine argument guides result aggregation
-          fullDF <- tryCatch(
-            {foreach(x=all_xml, 
-                     .packages = 'easyPubMed',
-                     .combine = rbind) %dopar% article_to_df(pubmedArticle = x, 
-                                                             autofill = T, 
-                                                             max_chars = -1, 
-                                                             getKeywords = F, 
-                                                             getAuthors = F)}, 
-            error = function(e) {NULL},
-            finally = {stopCluster(cl)})
-          
-          # Final time: record
-          t.stop <- Sys.time()
-          
-          # How long did it take?
-          foreach_df <- rbind(foreach_df, t.stop - t.start)
-        }
-        foreach_df <- data.frame(cbind(trial, foreach_df[[1]]))
-        names(foreach_df) <- c("trial", "time")
-        
-        foreach_df %>% 
-          ggplot(aes(x=trial, y=time)) +
-          geom_point() +
-          geom_line() +
-          scale_x_continuous(breaks = trial)
-
-        
+      
+        # Perform operation (using mclapply here (example is with lapply), 
+        # no further parameters)
+        final_df <- do.call(rbind, mclapply(all_xml, article_to_df, 
+                                            max_chars = -1, getAuthors = FALSE, 
+                                            mc.cores = numCores))
         return(final_df)
     }
     
@@ -428,63 +367,6 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
     # Determine which model preformed the best
     bestclassifier <- models_summary$model_name[which.max(models_summary$mean)]
     
-    # # Tune the best classifier (which is the random forest)
-    # tune_wf <- workflow() %>% 
-    #   add_recipe(train_rec) %>% 
-    #   add_model(rf_tune_spec)
-    # 
-    # # train_folds <- vfold_cv(train, v = 10, repeats = 1)
-    # 
-    # rf_grid <- grid_regular(
-    #   mtry(range = c(20, 40)),
-    #   min_n(range = c(2, 10)),
-    #   levels = 5
-    # )
-    # 
-    # doParallel::registerDoParallel()
-    # set.seed(seed_num+123)
-    # tune_regular_res <- tune_grid(
-    #   tune_wf,
-    #   resamples = train_folds,
-    #   grid = rf_grid,
-    #   control = control_grid(verbose = TRUE)
-    # )
-    # 
-    # # Create plot of tuning results
-    # tune_regular_res %>% 
-    #   collect_metrics() %>% 
-    #   filter(.metric == "roc_auc") %>% 
-    #   mutate(min_n = factor(min_n)) %>% 
-    #   ggplot(aes(mtry, mean, color=min_n)) + 
-    #   geom_line(alpha = 0.5, size = 1.5) + 
-    #   geom_point()
-    # 
-    # best_auc <- select_best(tune_regular_res, "roc_auc")
-    # final_rf <- finalize_model(
-    #   rf_tune_spec,
-    #   best_auc
-    # )
-    # 
-    # train_prep <- prep(train_rec)
-    # 
-    # library(vip)
-    # final_rf %>%
-    #   set_engine("ranger", importance = "permutation") %>%
-    #   fit(class ~ .,
-    #       data = juice(train_prep) %>% select(-pmid)
-    #   ) %>%
-    #   vip()
-    # 
-    # final_wf <- workflow() %>%
-    #   add_recipe(train_rec) %>%
-    #   add_model(final_rf)
-    # 
-    # final_res <- final_wf %>%
-    #   last_fit(training_split)
-    # 
-    # final_res %>%
-    #   collect_metrics()
-    
     # Create mapping for printing results
     metrics_map <- data.frame(
         abbreviation = c("roc_auc", "sens", "spec", "accuracy", "precision"),
@@ -512,23 +394,6 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
     
     # Fit the final model to the whole training dataset
     best_model_fit <- fit(final_wf, data = train_data)
-    
-    # final_model_spec %>%
-    #   set_engine("ranger", importance = "permutation") %>%
-    #   fit(class ~ .,
-    #       data = juice(train_prep) %>% select(-pmid)
-    #   ) %>%
-    #   vip()
-
-    # final_wf <- workflow() %>%
-    #   add_recipe(train_rec) %>%
-    #   add_model(best_model_fit)
-
-    # final_res <- final_wf %>%
-    #   last_fit(training_split)
-    # 
-    # final_res %>%
-    #   collect_metrics()
     
     # Create list to store return objects
     out <- list()
