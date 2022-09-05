@@ -33,7 +33,9 @@ source("word_cloud.R")
 source("pca_plot.R")
 source("helpers.R")
 
-options(spinner.color="#0275D8", spinner.color.background="#ffffff", spinner.size=1.5)
+options(spinner.color="#0275D8", 
+        spinner.color.background="#ffffff", 
+        spinner.size=1.5)
 
 ui <- (fluidPage(
   
@@ -89,58 +91,76 @@ ui <- (fluidPage(
                           you."), 
                         p("For example", 
                           a("Click here.", 
-                            href = "https://services.healthtech.dtu.dk/services/BioReader-1.2/ex_set2", 
+                            href = paste0("https://services.healthtech.dtu.dk/",
+                                          "services/BioReader-1.2/ex_set2"), 
                             target="_blank")),
                         textAreaInput(inputId = "pmidNegative", 
                                       label = NULL, width = "400px", 
                                       height = "180px", resize = "none"),
                      
                         h4("Documents to classify"),
-                        p("Paste PubMed IDs (max 1000) for articles that you would like to have classified as either relevant or irrelevant."), 
+                        p("Paste PubMed IDs (max 1000) for articles that you 
+                          would like to have classified as either relevant or 
+                          irrelevant."), 
                         p("For example", 
-                          a("Click here.", href = "https://services.healthtech.dtu.dk/services/BioReader-1.2/ex_testset", target="_blank")),
-                        textAreaInput(inputId = "pmidTBD", label = NULL, width = "400px", height = "180px", resize = "none"),
+                          a("Click here.", 
+                            href = paste0("https://services.healthtech.dtu.dk/",
+                                          "services/BioReader-1.2/ex_testset"), 
+                            target="_blank")),
+                        textAreaInput(inputId = "pmidTBD", label = NULL, 
+                                      width = "400px", height = "180px", 
+                                      resize = "none"),
                      
                      actionButton(inputId = "submitPMID", label = "Submit Job"),
                      br()
-                     
-                  )),
-                  
-                  column(width = 7, 
-                         tabsetPanel(
-                            tabPanel("Table", withSpinner(DT::dataTableOutput(outputId = "table"), 
-                                                          image = "spinner_2.gif", image.height = 300, image.width = 300)),
-                            tabPanel("Word cloud", 
-                                     fluidRow(
-                                       column(width = 12,
-                                              withSpinner(
-                                                plotOutput(outputId = "word_cloud_1"),
-                                                image = "spinner_2.gif", 
-                                                image.height = 300, 
-                                                image.width = 300)),
-                                       
-                                       column(width = 12,
-                                              withSpinner(
-                                                plotOutput(outputId = "word_cloud_2"),
-                                                image = "spinner_2.gif", 
-                                                image.height = 300, 
-                                                image.width = 300)))),
-                            
-                            tabPanel("PCA plot", 
-                                     withSpinner(plotOutput(outputId = "pca_plot"),
-                                                 image = "spinner_2.gif", 
-                                                 image.height = 300, 
-                                                 image.width = 300)))),
-                  
+                     )),
+               
+               # Column with output of text classification
+               column(width = 7, 
+                      tabsetPanel(
+                        
+                        # Results with ranked articles
+                        tabPanel("Table", 
+                                 withSpinner(DT::dataTableOutput(outputId = 
+                                                                   "table"), 
+                                             image = "spinner_2.gif", 
+                                             image.height = 300, 
+                                             image.width = 300)),
+                        
+                        # Word cloud with the top positive and negative terms
+                        tabPanel("Word cloud", 
+                                 fluidRow(
+                                   column(width = 12,
+                                          withSpinner(
+                                          plotOutput(outputId = "word_cloud_1"),
+                                          image = "spinner_2.gif", 
+                                          image.height = 300, 
+                                          image.width = 300)),
+                                   
+                                   column(width = 12,
+                                          withSpinner(
+                                            plotOutput(outputId = "word_cloud_2"),
+                                            image = "spinner_2.gif", 
+                                            image.height = 300, 
+                                            image.width = 300)))),
+                        
+                        # PCA plot of the document-term matrix
+                        tabPanel("PCA plot", 
+                                 withSpinner(
+                                   plotOutput(outputId = "pca_plot"),
+                                   image = "spinner_2.gif", 
+                                   image.height = 300, 
+                                   image.width = 300)))),
+               ),
+      
+      # Panel with instructions
+      tabPanel("Instructions",
+               fluidRow(column(12, includeMarkdown("instructions.md")))
          ),
-         tabPanel("Instructions",
-                  fluidRow(
-                     column(12, includeMarkdown("instructions.md")))
-         ),
-         tabPanel("Citation",
-                  fluidRow(
-                     column(12, includeMarkdown("citation.md"))
-                  ),
+      
+      # Panel with citation instructions
+      tabPanel("Citation",
+               fluidRow(column(12, includeMarkdown("citation.md"))),
          )
       ),style='width: 1200px; height: 1000px',
    )
@@ -206,6 +226,7 @@ server <- function(input, output, session){
    })
    
    
+   # Generate data to be used for creating wordclouds
    word_cloud_data <- reactive({
 
       req(data_splitted())
@@ -218,7 +239,8 @@ server <- function(input, output, session){
 
       })
    })
-
+   
+   # Generate table with ranked articles
    output$table <- DT::renderDataTable({
       
      data_split <- data_splitted()
@@ -232,7 +254,8 @@ server <- function(input, output, session){
                    rownames = FALSE)
      })
   })
-
+   
+   # Make wordcloud function reapeatable
    wordcloud_rep <- repeatable(wordcloud)
 
    # Setting colors
@@ -268,7 +291,8 @@ server <- function(input, output, session){
                cex.main=1.5, font.main=1)
       })
    })
-   # Plot PCA
+   
+   # Create PCA plot
    output$pca_plot <- renderPlot({
       
       req(data_splitted())
