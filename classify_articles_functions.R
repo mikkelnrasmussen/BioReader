@@ -1,3 +1,102 @@
+pubtator_converter <- function(){
+  
+  
+}
+
+library(httr)
+retrived_pubmed_abstracts <- function(pmidPositive, pmidNegative, pmidTBD, 
+                                      verbose=FALSE, shiny_input=FALSE, 
+                                      progress=FALSE){
+  
+  df_final <- data.frame()
+  
+  K <- 1
+  N <- length(pmidPositive)
+  safe_check <- function(chnk_len=floor(N/K), K=1){
+    print(chnk_len)
+    if(chnk_len < 100){
+      return(K)
+    } else {
+      K <- K+1
+      chnk_len <- floor(N/K)
+      return(safe_check(chnk_len, K))
+    }
+  }
+  K <- safe_check()
+  chnk_len <- floor(N/K)
+
+  for(i in seq(1, N, by=chnk_len)){
+    
+    start <- i
+    stop <- i+2
+    if(stop > N){
+      stop <- N
+    }
+    current_ids <- paste0(pmidPositive[start:stop], collapse=",")
+    
+    # url <- paste0("https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/",
+    #               "RESTful/tmTool.cgi/BioConcept/", current_ids,"/PubTator/")
+    
+    url <- paste0("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db",
+                  "=pubmed&id=", current_ids,"&retmode=abstract&rettype=xml")
+    
+    library(XML)
+    data = xmlParse(content(GET(url), as="text"))
+    xml_data <- xmlToList(data) 
+
+    df_current <- data.frame(pmid = numeric(chnk_len), 
+                             title = character(chnk_len),
+                             abstract = character(chnk_len),
+                             stringsAsFactors = FALSE)
+    title <- ""
+    abstract <- ""
+    for(i in 1:length(xml_data)){
+      pmid <- xml_data[i]$PubmedArticle$MedlineCitation$PMID$text
+      title <- xml_data[i]$PubmedArticle$MedlineCitation$Article$ArticleTitle
+      abstract <- xml_data[i]$PubmedArticle$MedlineCitation$Article$Abstract$AbstractText
+      
+      df_current$pmid[i] <- pmid
+      df_current$title[i] <- title
+      df_current$abstract[i] <- abstract
+    }
+    
+    # Initializing the final dataframe
+    # df_current <- data.frame()
+    
+    df_title <- data.frame()
+    df_abstract <- data.frame()
+    title <- ""
+    abstract <- ""
+    ptm <- proc.time()
+    for(line in text[[1]][1:5]){
+      title_pattern <- '^([0-9]+)\\|t\\|(.*)$'
+      abstract_pattern <- '^([0-9]+)\\|a\\|(.*)$'
+      title_present <- grepl(x = line, pattern = title_pattern)
+      abstract_present <- grepl(x = line, pattern = abstract_pattern)
+      
+      if(title_present){
+        m <- str_match(string = line, pattern = title_pattern)
+        pmid <- m[1,2]
+        title <- m[1,3]
+        tmp <- data.frame(pmid, title)
+        df_title <- rbind(df_title, tmp)
+      }
+      else if(abstract_present){
+        m <- str_match(string = line, pattern = abstract_pattern)
+        pmid <- m[1,2]
+        abstract <- m[1,3]
+        tmp <- data.frame(pmid, abstract)
+        df_abstract <- rbind(df_abstract, tmp)
+      }
+      df_current <- df_title %>% 
+        full_join(., df_abstract, by="pmid")
+    }
+    df_final <- rbind(df_final, df_current)
+  }
+}
+  
+  
+
 pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
                             shiny_input=FALSE, progress=FALSE){
     
@@ -59,6 +158,8 @@ pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
                                             mc.cores = numCores))
         return(final_df)
     }
+    
+  
     
     # Total number of articles
     total <- length(index$pmid)
@@ -148,6 +249,7 @@ pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
     
     return(final_df)
 }
+
 
 
 split_data <- function(data){
@@ -544,7 +646,7 @@ evaluate_models <- function(pred_train=NULL, test_data=NULL, fitted_models=NULL,
    
    # Create dataframe for mapping between model abbreviations and names
    models_map <- data.frame(model_name=c('bag_mars', 'bag_tree', 'bart','xgboost', 
-                                         'c5', 'dt', 'fdm', 'ldm', 'qdm', 'rdm',
+                                         'c5', 'dt', 'fdm', 'ldm', 'rdm',
                                          'logit', 'mars', 'nnet', 'mr', 
                                          'nb', 'knn', 'null', 'pls', 'rf', 'rule', 
                                          'svm_linear' ,'svm_rbf', 'svm_poly'),
