@@ -2,6 +2,7 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
                                       verbose=FALSE, shiny_input=FALSE, 
                                       progress=FALSE){
   
+  # Functions for choosing the chunk size to be extracted in each loop
   safe_check <- function(chnk_len=floor(N/K), K=1){
     if(chnk_len < 400){
       return(K)
@@ -57,19 +58,20 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
 
   for(i in seq(1, N, by=chnk_len)){
     
+    # Setting indexes for articles to be retrieved
     start <- i
     stop <- i+chnk_len-1
     if(stop > N){
       stop <- N
     }
     
+    # Define url with PMIDs and parse from PubMed
     current_ids <- paste0(all_ids[start:stop], collapse=",")
-    
     url <- paste0("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db",
                   "=pubmed&id=", current_ids,"&retmode=abstract&rettype=xml")
-  
     main_node <- xml2::read_xml(url) %>% xml_children()
     
+    # Extract relevant information from PubMed XML
     pmid_path <- "MedlineCitation/PMID"
     title_path <- "MedlineCitation/Article/ArticleTitle"
     abstract_path <- "MedlineCitation/Article/Abstract"
@@ -79,7 +81,6 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
     abstract <- main_node %>% map_chr(. %>% xml_find_first(xpath=abstract_path) %>% xml_text())
     year <- main_node %>% map_chr(. %>% xml_find_first(xpath=year_path) %>% xml_text())
     df_current <- tibble(pmid=pmid, year=year, title=title, abstract=abstract)
-  
     df_final <- rbind(df_final, df_current)
     
     if(progress){
