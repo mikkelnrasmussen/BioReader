@@ -15,12 +15,16 @@ library(plsmod)
 library(rules)
 library(baguette)
 library(doParallel)
+library(data.table)
+library(httr)
+library(xml2)
 
 source("classify_articles_functions.R")
 
-# Whether to save or load models
+# Whether to train, save or load models
+train_model <- FALSE
 save_model <- FALSE
-load_model <- FALSE
+load_model <- TRUE
 
 # Whether to test the pubmed_articles function or not 
 download_articles <- FALSE
@@ -36,16 +40,15 @@ if(download_articles){
   pos_pmids <- all_pos[501:1000,]
   neg_pmids <- all_neg[501:1000,]
   
-  # library(profvis)
   # Provide the PMIDs positive and negative for the information and the PMIDs for 
   # the articles that needs to be determined. The input right now is strings with 
   # the PMIDs, since we are working with input through a Shiny app.
-  pmid_data <- pubmed_articles(pmidPositive = pos_pmids,
-                               pmidNegative = neg_pmids,
-                               pmidTBD = tbd_pmids,
-                               verbose = TRUE,
-                               progress=FALSE,
-                               shiny_input = FALSE)
+  pmid_data <- retrive_articles(pmidPositive = pos_pmids,
+                                pmidNegative = neg_pmids,
+                                pmidTBD = tbd_pmids,
+                                verbose = TRUE,
+                                progress=FALSE,
+                                shiny_input = FALSE)
   
   sum(pmid_data$class == 0)
   sum(pmid_data$class == 1)
@@ -114,17 +117,19 @@ sum(training_data$class == 'Positive')
 sum(training_data$class == 'Negative')
 dim(testing_data)
 
-# Training the classifiers and select the best classifier based on specified 
-# metric
-training_results <- train_classifiers(train_data = training_data, 
-                                      eval_metric="roc_auc", 
-                                      verbose=TRUE, fit_all=TRUE)
+if(train_model){
+  # Training the classifiers and select the best classifier based on specified 
+  # metric
+  training_results <- train_classifiers(train_data = training_data, 
+                                        eval_metric="roc_auc", 
+                                        verbose=TRUE, fit_all=TRUE)
+  
+  # Collect model(s), metrics and predictions
+  metrics <- training_results$model_metrics
+  pred_train <- training_results$model_predictions
+  final_model <- training_results$best_model
+  fitted_models <- training_results$fitted_models}
 
-# Collect model(s), metrics and predictions
-metrics <- training_results$model_metrics
-pred_train <- training_results$model_predictions
-final_model <- training_results$best_model
-fitted_models <- training_results$fitted_models
 
 # Save final model
 if(save_model){
@@ -134,7 +139,11 @@ if(save_model){
 }
 
 if(load_model){
-  final_model <- readRDS("rf_pred_model_full.rds")
+  final_model_list <- readRDS("rf_pred_model.rds")
+  metrics <- final_model_list$model_metrics
+  pred_train <- final_model_list$model_predictions
+  final_model <- final_model_list$best_model
+  fitted_models <- final_model_list$fitted_models
 }
 
 # Predict classes for the test data and extract results
