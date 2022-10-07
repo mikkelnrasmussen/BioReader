@@ -12,13 +12,48 @@ retrived_pubmed_abstracts <- function(pmidPositive, pmidNegative, pmidTBD,
     }
   }
   
+  if(shiny_input){
+    # Using regex to find all PubMed IDs in input boxes and convert to lists 
+    # - only used when the input is giving through the Shiny app
+    if(!(is.integer(pmidPositive) & is.integer(pmidNegative) & is.integer(pmidTBD))){
+      pmidPositive <- str_match_all(pmidPositive, "\\d+")
+      pmidNegative <- str_match_all(pmidNegative, "\\d+")
+      pmidTBD <- str_match_all(pmidTBD, "\\d+")
+    }
+  }
+  
+  # Storing PMIDs and class in dataframes
+  indexPos <- as.data.frame(pmidPositive)
+  indexPos$class <- 1
+  names(indexPos) <- c("pmid", "class")
+  
+  indexNeg <- as.data.frame(pmidNegative)
+  indexNeg$class <- 0
+  names(indexNeg) <- c("pmid", "class")
+  
+  indexTBD <- as.data.frame(pmidTBD)
+  indexTBD$class <- 2
+  names(indexTBD) <- c("pmid", "class")
+  
+  # Combine index dataframes and order by pmid
+  index <- do.call("rbind", list(indexPos, indexNeg, indexTBD))
+  
+  # Create data frame for storing the results concatenate PMIDs
   df_final <- data.frame()
   all_ids <- c(pmidPositive, pmidNegative, pmidTBD)
   
+  # Initialize variables for abstract retrieval
   K <- 1
   N <- length(all_ids)
   K <- safe_check()
   chnk_len <- floor(N/K)
+  retreived <- 0
+  
+  if(progress){
+    # Increment the progress bar, and update the detail text.
+    incProgress(amount=0, 
+                detail = paste(retreived, " out of ", N))
+  }
 
   for(i in seq(1, N, by=chnk_len)){
     
@@ -38,13 +73,56 @@ retrived_pubmed_abstracts <- function(pmidPositive, pmidNegative, pmidTBD,
     pmid_path <- "MedlineCitation/PMID"
     title_path <- "MedlineCitation/Article/ArticleTitle"
     abstract_path <- "MedlineCitation/Article/Abstract"
+    # year_path <- "MedlineCitation/Article/ArticleDate/Year"
+    # year_path_2 <- "MedlineCitation/DateCompleted/Year"
+    # year_path_3 <- "MedlineCitation/DateRevised/Year"
+    year_path <- "PubmedData/History/PubMedPubDate/Year"
     pmid <- main_node %>% map_chr(. %>% xml_find_first(pmid_path) %>% xml_text())
     title <- main_node %>% map_chr(. %>% xml_find_first(xpath=title_path) %>% xml_text())
     abstract <- main_node %>% map_chr(. %>% xml_find_first(xpath=abstract_path) %>% xml_text())
-    df_current <- tibble(pmid=pmid, title=title, abstract=abstract)
+    year <- main_node %>% map_chr(. %>% xml_find_first(xpath=year_path) %>% xml_text())
+    df_current <- tibble(pmid=pmid, year=year, title=title, abstract=abstract)
   
     df_final <- rbind(df_final, df_current)
+    
+    if(progress){
+      retreived <- length(df_final$pmid)
+      # Increment the progress bar, and update the detail text.
+      incProgress(amount=articles/total, 
+                  detail=paste(retreived, " out of ", N))
     }
+  }
+  
+  # Filter the index dataframe based on the articles it was possible to 
+  # retrieve from PubMed
+  index <- filter(index, index$pmid %in% df_final$pmid)
+  
+  df_final <- df_final %>% 
+    dplyr::select(pmid, year, title, abstract)
+  
+  # If abstracts are missing on PubMed, find out which pmids are associated 
+  # with these
+  missing_pmids <- df_final %>% 
+    group_by(pmid) %>% 
+    filter(all(is.na(abstract))) %>% 
+    pull(pmid)
+  
+  # Filter df_final, index and info based on the pmids for articles
+  # with missing abstracts 
+  df_final <- filter(df_final, !(pmid %in% missing_pmids))
+  if(verbose){
+    frac_retrieved <- sum(df_final$pmid %in% index$pmid)/length(index$pmid)
+    print(paste0("Procent of PubMed articles with abstract: ", 
+                 round(frac_retrieved, 4)*100, "%"))
+  }
+  index <- filter(index, !(pmid %in% missing_pmids))
+  
+  # Join information retreived from PubMed with class labels
+  index$pmid <- as.character(index$pmid)
+  df_final <- df_final %>% 
+    inner_join(., index, by='pmid')
+  
+  return(df_final)
 }
 
 pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
