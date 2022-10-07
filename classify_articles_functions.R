@@ -1,6 +1,6 @@
 retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD, 
-                                      verbose=FALSE, shiny_input=FALSE, 
-                                      progress=FALSE){
+                              verbose=FALSE, shiny_input=FALSE, 
+                              progress=FALSE){
   
   # Functions for choosing the chunk size to be extracted in each loop
   safe_check <- function(chnk_len=floor(N/K), K=1){
@@ -16,11 +16,11 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
   if(shiny_input){
     # Using regex to find all PubMed IDs in input boxes and convert to lists 
     # - only used when the input is giving through the Shiny app
-    if(!(is.integer(pmidPositive) & is.integer(pmidNegative) & is.integer(pmidTBD))){
+    #if(!(is.integer(pmidPositive) & is.integer(pmidNegative) & is.integer(pmidTBD))){
       pmidPositive <- str_match_all(pmidPositive, "\\d+")
       pmidNegative <- str_match_all(pmidNegative, "\\d+")
       pmidTBD <- str_match_all(pmidTBD, "\\d+")
-    }
+    #}
   }
   
   # Storing PMIDs and class in dataframes
@@ -41,7 +41,7 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
   
   # Create data frame for storing the results concatenate PMIDs
   df_final <- data.frame()
-  all_ids <- c(pmidPositive, pmidNegative, pmidTBD)
+  all_ids <- index$pmid
   
   # Initialize variables for abstract retrieval
   K <- 1
@@ -86,7 +86,7 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
     if(progress){
       retreived <- length(df_final$pmid)
       # Increment the progress bar, and update the detail text.
-      incProgress(amount=articles/total, 
+      incProgress(amount=chnk_len/N, 
                   detail=paste(retreived, " out of ", N))
     }
   }
@@ -377,7 +377,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
     # Setting up the Single Layer Neural Network (NNET model)
     nnet_spec <- mlp(epochs = 50, hidden_units = 10, dropout = 0.1, penalty = 0.01,
                      activation = "relu") %>%
-        set_engine("nnet") %>%
+        set_engine("keras") %>%
         set_mode("classification")
     
     # Setting up Multinomial Regression Model
