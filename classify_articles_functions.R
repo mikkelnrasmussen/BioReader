@@ -1,4 +1,4 @@
-retrived_pubmed_abstracts <- function(pmidPositive, pmidNegative, pmidTBD, 
+retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD, 
                                       verbose=FALSE, shiny_input=FALSE, 
                                       progress=FALSE){
   
@@ -73,9 +73,6 @@ retrived_pubmed_abstracts <- function(pmidPositive, pmidNegative, pmidTBD,
     pmid_path <- "MedlineCitation/PMID"
     title_path <- "MedlineCitation/Article/ArticleTitle"
     abstract_path <- "MedlineCitation/Article/Abstract"
-    # year_path <- "MedlineCitation/Article/ArticleDate/Year"
-    # year_path_2 <- "MedlineCitation/DateCompleted/Year"
-    # year_path_3 <- "MedlineCitation/DateRevised/Year"
     year_path <- "PubmedData/History/PubMedPubDate/Year"
     pmid <- main_node %>% map_chr(. %>% xml_find_first(pmid_path) %>% xml_text())
     title <- main_node %>% map_chr(. %>% xml_find_first(xpath=title_path) %>% xml_text())
@@ -218,11 +215,9 @@ pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
         temp_df <- retrieve_pubmed(i[["pmid"]])
         final_df <- rbind(final_df, temp_df)
         
-        retreived <- length(final_df$pmid)
-        print(retreived)
-        
         if(progress){
           # Increment the progress bar, and update the detail text.
+          retreived <- length(final_df$pmid)
           incProgress(amount=articles/total, 
                       detail=paste(retreived, " out of ", total))
         }
