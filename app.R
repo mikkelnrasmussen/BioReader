@@ -168,8 +168,6 @@ ui <- (fluidPage(
 )
 )
 
-
-
 server <- function(input, output, session){
   
   # Reactive elements for checking the PMIDs have been supplied by the user
@@ -203,11 +201,12 @@ server <- function(input, output, session){
       withProgress({
          setProgress(message = "Downloading articles from PubMed...",
                      value = 0)
-      pubmed_articles(posPMIDs(), 
-                      negPMIDs(), 
-                      tbdPMIDs(),
-                      shiny_input=TRUE,
-                      progress=TRUE)
+        retrive_articles(posPMIDs(), 
+                         negPMIDs(), 
+                         tbdPMIDs(),
+                         verbose=TRUE,
+                         shiny_input=TRUE,
+                         progress=TRUE)
       })}
       )
    
@@ -218,7 +217,6 @@ server <- function(input, output, session){
          split_data(pmid_data())
       })
    })
-   
    
    # Generate data to be used for creating wordclouds
    word_cloud_data <- reactive({
