@@ -1,30 +1,30 @@
 # shiny libraries
 library(shiny)
-library(shinycssloaders)
-library(wordcloud)
-library(rsconnect)
+library(shinycssloaders) # not on DTU Health Tech server
+# library(wordcloud) # not on DTU Health Tech server
+# library(rsconnect)
 library(markdown)
 
 # clssify_articles_main libraries
 library(parallel)
+library(doParallel)
 library(doMC)
-library(easyPubMed)
+library(easyPubMed) # not on DTU Health Tech server
 library(dplyr)
 library(plyr)
-library(tidyr)
-# library(stringr)
-library(tidymodels)
-library(textrecipes)
-library(discrim)
-library(rules)
-library(baguette)
+library(tidyr) # not on DTU Health Tech server
+library(stringr)
+library(tidymodels) # not on DTU Health Tech server
+library(textrecipes) # not on DTU Health Tech server
+library(discrim) # not on DTU Health Tech server
+library(rules) # not on DTU Health Tech server
+library(baguette) # not on DTU Health Tech server
 
 # pca_plot libraries
-library(stopwords)
+library(stopwords) # not on DTU Health Tech server
 
 # word_cloud libraries
-library(wordcloud)
-library(tidyr)
+library(wordcloud) # not on DTU Health Tech server
 library(RColorBrewer)
 
 # Source custom functions
@@ -42,7 +42,7 @@ ui <- (fluidPage(
   # Title panel with DTU logo
   titlePanel(
     fluidRow(
-      column(9, h1("BioReader - 1.3"), 
+      column(9, h1("BioReader - 2.0"), 
              h4("Biomedical Research Article Distiller")),
       column(3, tags$img(height = 100, width = 65,
                          src = "img/DTU_Logo_Corporate_Red_RGB.png")),
@@ -162,7 +162,8 @@ ui <- (fluidPage(
       tabPanel("Citation",
                fluidRow(column(12, includeMarkdown("citation.md"))),
          )
-      ),style='width: 1200px; height: 1000px',
+      ),
+    style='width: 1200px; height: 1000px',
    )
 )
 )
@@ -198,57 +199,43 @@ server <- function(input, output, session){
    
    # Collect pmid article data
    pmid_data <- eventReactive(
-     
-     input$submitPMID,
-    
+     input$submitPMID, {
       withProgress({
          setProgress(message = "Downloading articles from PubMed...",
                      value = 0)
-         
       pubmed_articles(posPMIDs(), 
                       negPMIDs(), 
                       tbdPMIDs(),
                       shiny_input=TRUE,
                       progress=TRUE)
-      })
+      })}
       )
    
    # Split data into training and testing data
    data_splitted <- reactive({
-      
-      req(pmid_data())
-      
       withProgress({
          setProgress(message = "Splitting data...")
-         pm_data <- pmid_data()
-         split_data(pm_data)
+         split_data(pmid_data())
       })
    })
    
    
    # Generate data to be used for creating wordclouds
    word_cloud_data <- reactive({
-
-      req(data_splitted())
-
       withProgress({
          setProgress(message = "Processing data for wordcloud...")
-         data_split <- data_splitted()
-         pm_data <- pmid_data()
-         word_cloud(data = data_split, pmid_data = pm_data)
-
+         word_cloud(data = data_splitted(), pmid_data = pmid_data())
       })
    })
    
    # Generate table with ranked articles
    output$table <- DT::renderDataTable({
-      
-     data_split <- data_splitted()
-      
      withProgress({
         setProgress(message = "Classifying articles...")
-   
-     DT::datatable(classify_articles(data_split)$ranked_results,
+     DT::datatable(classify_articles(data_splitted(),
+                                     metric="roc_auc", 
+                                     verbose=TRUE,
+                                     fold=5)$ranked_results,
                    escape = FALSE,
                    selection = "none",
                    rownames = FALSE)
@@ -263,10 +250,8 @@ server <- function(input, output, session){
 
    # Creating the word cloud for the positive terms
    output$word_cloud_1 <- renderPlot({
-
       withProgress({
          setProgress(message = "Creating wordcloud for postive terms...")
-
       pos_av_freq <- word_cloud_data()$pos_av_freq
       wordcloud_rep(words = pos_av_freq$word, freq = pos_av_freq$freq,
                     min.freq = 0.05, max.words = 45, random.order = FALSE,
@@ -278,11 +263,8 @@ server <- function(input, output, session){
 
    # Creating the word cloud for the negative terms
    output$word_cloud_2 <- renderPlot({
-
       withProgress({
          setProgress(message = "Creating wordcloud for negative terms...")
-         
-
          neg_av_freq <- word_cloud_data()$neg_av_freq
          wordcloud_rep(words = neg_av_freq$word, freq = neg_av_freq$freq,
                        min.freq = 0.05, max.words = 45, random.order = FALSE,
@@ -294,13 +276,9 @@ server <- function(input, output, session){
    
    # Create PCA plot
    output$pca_plot <- renderPlot({
-      
-      req(data_splitted())
-      
       withProgress({
          setProgress(message = "Creating PCA plot...")
-         data_split <- data_splitted()
-         pca_plot(data_split)
+         pca_plot(data_splitted())
       })
    })
 }
