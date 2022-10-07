@@ -1,20 +1,9 @@
-pubtator_converter <- function(){
-  
-  
-}
-
-library(httr)
 retrived_pubmed_abstracts <- function(pmidPositive, pmidNegative, pmidTBD, 
                                       verbose=FALSE, shiny_input=FALSE, 
                                       progress=FALSE){
   
-  df_final <- data.frame()
-  
-  K <- 1
-  N <- length(pmidPositive)
   safe_check <- function(chnk_len=floor(N/K), K=1){
-    print(chnk_len)
-    if(chnk_len < 100){
+    if(chnk_len < 400){
       return(K)
     } else {
       K <- K+1
@@ -22,80 +11,41 @@ retrived_pubmed_abstracts <- function(pmidPositive, pmidNegative, pmidTBD,
       return(safe_check(chnk_len, K))
     }
   }
+  
+  df_final <- data.frame()
+  all_ids <- c(pmidPositive, pmidNegative, pmidTBD)
+  
+  K <- 1
+  N <- length(all_ids)
   K <- safe_check()
   chnk_len <- floor(N/K)
 
   for(i in seq(1, N, by=chnk_len)){
     
     start <- i
-    stop <- i+2
+    stop <- i+chnk_len-1
     if(stop > N){
       stop <- N
     }
-    current_ids <- paste0(pmidPositive[start:stop], collapse=",")
     
-    # url <- paste0("https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/",
-    #               "RESTful/tmTool.cgi/BioConcept/", current_ids,"/PubTator/")
+    current_ids <- paste0(all_ids[start:stop], collapse=",")
     
     url <- paste0("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db",
                   "=pubmed&id=", current_ids,"&retmode=abstract&rettype=xml")
+  
+    main_node <- xml2::read_xml(url) %>% xml_children()
     
-    library(XML)
-    data = xmlParse(content(GET(url), as="text"))
-    xml_data <- xmlToList(data) 
-
-    df_current <- data.frame(pmid = numeric(chnk_len), 
-                             title = character(chnk_len),
-                             abstract = character(chnk_len),
-                             stringsAsFactors = FALSE)
-    title <- ""
-    abstract <- ""
-    for(i in 1:length(xml_data)){
-      pmid <- xml_data[i]$PubmedArticle$MedlineCitation$PMID$text
-      title <- xml_data[i]$PubmedArticle$MedlineCitation$Article$ArticleTitle
-      abstract <- xml_data[i]$PubmedArticle$MedlineCitation$Article$Abstract$AbstractText
-      
-      df_current$pmid[i] <- pmid
-      df_current$title[i] <- title
-      df_current$abstract[i] <- abstract
-    }
-    
-    # Initializing the final dataframe
-    # df_current <- data.frame()
-    
-    df_title <- data.frame()
-    df_abstract <- data.frame()
-    title <- ""
-    abstract <- ""
-    ptm <- proc.time()
-    for(line in text[[1]][1:5]){
-      title_pattern <- '^([0-9]+)\\|t\\|(.*)$'
-      abstract_pattern <- '^([0-9]+)\\|a\\|(.*)$'
-      title_present <- grepl(x = line, pattern = title_pattern)
-      abstract_present <- grepl(x = line, pattern = abstract_pattern)
-      
-      if(title_present){
-        m <- str_match(string = line, pattern = title_pattern)
-        pmid <- m[1,2]
-        title <- m[1,3]
-        tmp <- data.frame(pmid, title)
-        df_title <- rbind(df_title, tmp)
-      }
-      else if(abstract_present){
-        m <- str_match(string = line, pattern = abstract_pattern)
-        pmid <- m[1,2]
-        abstract <- m[1,3]
-        tmp <- data.frame(pmid, abstract)
-        df_abstract <- rbind(df_abstract, tmp)
-      }
-      df_current <- df_title %>% 
-        full_join(., df_abstract, by="pmid")
-    }
+    pmid_path <- "MedlineCitation/PMID"
+    title_path <- "MedlineCitation/Article/ArticleTitle"
+    abstract_path <- "MedlineCitation/Article/Abstract"
+    pmid <- main_node %>% map_chr(. %>% xml_find_first(pmid_path) %>% xml_text())
+    title <- main_node %>% map_chr(. %>% xml_find_first(xpath=title_path) %>% xml_text())
+    abstract <- main_node %>% map_chr(. %>% xml_find_first(xpath=abstract_path) %>% xml_text())
+    df_current <- tibble(pmid=pmid, title=title, abstract=abstract)
+  
     df_final <- rbind(df_final, df_current)
-  }
+    }
 }
-  
-  
 
 pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
                             shiny_input=FALSE, progress=FALSE){
@@ -276,7 +226,7 @@ split_data <- function(data){
 }
 
 train_classifiers <- function(train_data, eval_metric, verbose=FALSE, 
-                              fit_all=FALSE, seed_num=123,
+                              fit_all=FALSE, seed_num=123, fold=5,
                               models=c('bag_mars', 'bag_tree', 'bart','xgboost', 
                                        'c5', 'dt', 'fdm', 'ldm', 'qdm', 'rdm',
                                        'logit', 'mars', 'nnet', 'mr', 
@@ -351,9 +301,9 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
         set_mode("classification")
     
     # Setting up the Single Layer Neural Network (NNET model)
-    nnet_spec <- mlp(epochs = 100, hidden_units = 5, dropout = 0.1,
+    nnet_spec <- mlp(epochs = 50, hidden_units = 10, dropout = 0.1, penalty = 0.01,
                      activation = "relu") %>%
-        set_engine("keras") %>%
+        set_engine("nnet") %>%
         set_mode("classification")
     
     # Setting up Multinomial Regression Model
@@ -422,7 +372,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
     
     # Evaluating model proformance with 10-fold cross-validation resampling
     set.seed(seed_num)
-    train_folds <- vfold_cv(train_data, v = 10, repeats = 1)
+    train_folds <- vfold_cv(train_data, v = fold, repeats = 1)
     
     # Training the models using workflow set
     # Set up workflow where the train recipe is applied to every model specified
@@ -610,7 +560,10 @@ classifier_predict <- function(final_model_fit, test_data){
 }
 
 # Wrapper function for training and predicting in one go
-classify_articles <- function(data_separated){
+classify_articles <- function(data_separated, metric="roc_auc", fold=5,
+                              verbose=TRUE, fit_all=FALSE,
+                              models=c("xgboost", "dt", "fdm", "logit", "mars",
+                                       "nnet", "mr","knn", "rf", "svm_rbf")){
   
   # Splitting the PMIDs into training and testing data
   training_data <- tibble(data_separated$train_data)
@@ -623,12 +576,9 @@ classify_articles <- function(data_separated){
   # Training the classifiers and select the best classifier based on specified 
   # metric
   training_results <- train_classifiers(train_data = training_data, 
-                                        eval_metric="roc_auc", 
-                                        verbose=TRUE, fit_all=FALSE,
-                                        models=c("xgboost", 
-                                                 "dt", "fdm", "logit", "mars",
-                                                 "nnet", 
-                                                 "mr","knn", "rf", "svm_rbf"))
+                                        eval_metric=metric, fold=fold,
+                                        models=models, verbose=verbose,
+                                        fit_all=)
   
   # Select best model
   best_model <- training_results$best_model
