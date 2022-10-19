@@ -1,6 +1,7 @@
 # shiny libraries
 library(shiny)
 library(shinycssloaders) # not on DTU Health Tech server
+library(shinyBS)
 # library(wordcloud) # not on DTU Health Tech server
 # library(rsconnect)
 library(markdown)
@@ -112,6 +113,8 @@ ui <- (fluidPage(
                                       resize = "none"),
                      
                      actionButton(inputId = "submitPMID", label = "Submit Job"),
+                     actionButton(inputId = "runtime", label = "Expected runtime"),
+                     tags$head(tags$style("#shiny-modal img { max-width: 100%; }")),
                      br()
                      )),
                
@@ -193,6 +196,16 @@ server <- function(input, output, session){
            "Please write the PubMed IDs of the articles you wish to classify"),
     )
     input$pmidTBD
+  })
+  
+  observeEvent(input$runtime, {
+    showModal(modalDialog(
+      title = NULL,
+      HTML('<img src="img/BioReader_runtime.png" />'),
+      size = "l",
+      easyClose = TRUE,
+      footer = NULL
+    ))
   })
    
    # Collect pmid article data
