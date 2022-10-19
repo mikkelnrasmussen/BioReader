@@ -2,6 +2,8 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
                               verbose=FALSE, shiny_input=FALSE, 
                               progress=FALSE){
   
+  
+  
   # Functions for choosing the chunk size to be extracted in each loop
   safe_check <- function(chnk_len=floor(N/K), K=1){
     if(chnk_len < 400){
@@ -69,7 +71,13 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
     current_ids <- paste0(all_ids[start:stop], collapse=",")
     url <- paste0("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db",
                   "=pubmed&id=", current_ids,"&retmode=abstract&rettype=xml")
-    main_node <- xml2::read_xml(url) %>% xml_children()
+    
+    # Set up retry procedure should the connection fail
+    maxTimes <- 5
+    
+    req <- RETRY(verb = "GET", url = url, times = maxTimes, 
+                 quiet = FALSE, terminate_on = NULL)
+    main_node <- xml2::read_xml(req) %>% xml_children()
     
     # Extract relevant information from PubMed XML
     pmid_path <- "MedlineCitation/PMID"
@@ -302,7 +310,7 @@ split_data <- function(data){
 train_classifiers <- function(train_data, eval_metric, verbose=FALSE, 
                               fit_all=FALSE, seed_num=123, fold=5,
                               models=c('bag_mars', 'bag_tree', 'bart','xgboost', 
-                                       'c5', 'dt', 'fdm', 'ldm', 'qdm', 'rdm',
+                                       'c5', 'dt', 'fdm', 'ldm', 'rdm',
                                        'logit', 'mars', 'nnet', 'mr', 
                                        'nb', 'knn', 'null', 'pls', 'rf', 'rule', 
                                        'svm_linear' ,'svm_rbf', 'svm_poly')){ 
@@ -375,8 +383,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
         set_mode("classification")
     
     # Setting up the Single Layer Neural Network (NNET model)
-    nnet_spec <- mlp(epochs = 50, hidden_units = 10, dropout = 0.1, penalty = 0.01,
-                     activation = "relu") %>%
+    nnet_spec <- mlp(epochs = 50, hidden_units = 10, activation = "relu") %>%
         set_engine("keras") %>%
         set_mode("classification")
     
@@ -488,7 +495,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
     
     # Apply helper function and extract the metrics 
     model_metrics <- models %>% 
-        mutate(res = map(model, map_collect_metrics)) %>% 
+        mutate(res = purrr::map(model, map_collect_metrics)) %>% 
         dplyr::select(model_name, res) %>% 
         unnest(res)
     
@@ -501,7 +508,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
     
     # Apply helper function and extract the predictions 
     model_predictions <- models %>% 
-        mutate(res = map(model, map_collect_predictions)) %>% 
+        mutate(res = purrr::map(model, map_collect_predictions)) %>% 
         dplyr::select(model_name, res) %>% 
         unnest(res)
     
@@ -509,7 +516,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
     models_summary <- model_metrics %>% 
         group_by(model_name, .metric) %>% 
         dplyr::summarise(mean = mean(.estimate), .groups='drop') %>% 
-        filter(.metric == eval_metric) 
+        filter(.metric == eval_metric)
     
     # Determine which model preformed the best
     bestclassifier <- models_summary$model_name[which.max(models_summary$mean)]
