@@ -53,9 +53,12 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
   retreived <- 0
   
   if(progress){
+    setProgress(message = "Downloading articles from PubMed...",
+                detail = paste(retreived, "out of", N),
+                value = 0)
     # Increment the progress bar, and update the detail text.
-    incProgress(amount=0, 
-                detail = paste(retreived, " out of ", N))
+    # incProgress(amount=0, 
+    #             detail = paste(retreived, "out of", N))
   }
 
   for(i in seq(1, N, by=chnk_len)){
@@ -95,7 +98,7 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
       retreived <- length(df_final$pmid)
       # Increment the progress bar, and update the detail text.
       incProgress(amount=chnk_len/N, 
-                  detail=paste(retreived, " out of ", N))
+                  detail=paste(retreived, "out of", N))
     }
   }
   
@@ -203,7 +206,7 @@ pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
     if(progress){
       # Increment the progress bar, and update the detail text.
       incProgress(amount=0, 
-                  detail = paste(retreived, " out of ", total))
+                  detail = paste(retreived, "out of", total))
     }
     
     # If the number of PMIDs are greater than 1300, the retrievel from PubMed is 
@@ -282,8 +285,6 @@ pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
     return(final_df)
 }
 
-
-
 split_data <- function(data){
     
    # Create data frame with train data and remove articles with 
@@ -307,9 +308,9 @@ split_data <- function(data){
    return(out)
 }
 
-train_classifiers <- function(train_data, eval_metric, verbose=FALSE, 
-                              fit_all=FALSE, seed_num=123, fold=5,
-                              models=c('bag_mars', 'bag_tree', 'bart','xgboost', 
+train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
+                              fit_all=FALSE, seed_num=123, fold=5, progress=FALSE,
+                              model_names=c('bag_mars', 'bag_tree', 'bart','xgboost', 
                                        'c5', 'dt', 'fdm', 'ldm', 'rdm',
                                        'logit', 'mars', 'nnet', 'mr', 
                                        'nb', 'knn', 'null', 'pls', 'rf', 'rule', 
@@ -388,8 +389,8 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
         set_mode("classification")
     
     # Setting up Multinomial Regression Model
-    mr_spec <- multinom_reg() %>% 
-        set_engine("keras") %>% 
+    mr_spec <- multinom_reg(penalty = 0.01, mixture=0.5) %>% 
+        set_engine("glmnet") %>% 
         set_mode("classification")
     
     # Setting up the Naive Bayes model
@@ -449,42 +450,79 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
                         svm_poly = svm_poly_spec, svm_rbf = svm_rbf_spec)
     
     # Include only the specified models
-    selected_model_specs <- model_specs[names(model_specs) %in% models]
+    selected_model_specs <- model_specs[names(model_specs) %in% model_names]
     
     # Evaluating model proformance with 10-fold cross-validation resampling
     set.seed(seed_num)
     train_folds <- vfold_cv(train_data, v = fold, repeats = 1)
     
+    # Evaluation metrics and save predictions
+    metrics = metric_set(roc_auc, sens, spec, accuracy, precision)
+    control <- control_resamples(save_pred = TRUE)
+    
     # Training the models using workflow set
     # Set up workflow where the train recipe is applied to every model specified
-    train_models <- 
-        workflow_set(
-            preproc = list(base = train_rec),
-            models = selected_model_specs,
-            cross = TRUE
-        )
-    
-    # Evaluation metrics
-    metrics = metric_set(roc_auc, sens, spec, accuracy, precision)
+    # train_models <- 
+    #     workflow_set(
+    #         preproc = list(base = train_rec),
+    #         models = selected_model_specs,
+    #         cross = TRUE
+    #     )
     
     # doParallel
-    cores <- parallel::detectCores(logical = FALSE)
-    cl <- makePSOCKcluster(cores)
-    registerDoParallel(cores = cl)
-    
+    # cores <- parallel::detectCores(logical = FALSE)
+    # cl <- makePSOCKcluster(cores)
+    # registerDoParallel(cores = cl)
     # Train all the models by mapping the fit_resamples function to every 
     # training workflow
-    train_models <- train_models %>%
-        workflow_map("fit_resamples", resamples = train_folds, 
-                     metrics = metrics, 
-                     verbose = TRUE, 
-                     control=control_resamples(save_pred = TRUE))
+    # train_models <- train_models %>%
+    #    workflow_map("fit_resamples", resamples = train_folds,
+    #                 metrics = metrics,
+    #                 verbose = TRUE,
+    #                 control=control_resamples(save_pred = TRUE))
+    # stopCluster(cl)
+    
+    # Initialize number of models and list for storing results
+    num_models <- length(selected_model_specs)
+    results <- list()
+    
+    # Increase progress if running in Shiny
+    if(progress){
+      # Increment the progress bar, and update the detail text.
+      incProgress(amount=0, 
+                  message = "Training classification models\\n",
+                  detail = paste(0, "out of", num_models))
+    }
+    
+    wtime <- system.time({
+    for(i in 1:num_models){
+      start.time <- Sys.time()
+      print(names(selected_model_specs[i]))
+      train_result <- fit_resamples(selected_model_specs[[i]],
+                                    train_rec, 
+                                    train_folds, 
+                                    metrics = metrics,
+                                    control = control)
+      results[[model]] <- train_result
+      end.time <- Sys.time()
+      time.taken <- end.time - start.time
+      print(time.taken)
+      
+      # Increment the progress bar, and update the detail text.
+      if(progress){
+        incProgress(amount=1/num_models,
+                    message = "Training classification models\n",
+                    detail=paste(i, "out of", num_models))
+      }
+    }
+    })
+    wtime
     
     # Evaluation
     # Create a tibble with model results, specs and respective names
-    models <- tibble(model = train_models$result,
+    models <- tibble(model = results,
                      model_spec = selected_model_specs,
-                     model_name = models)
+                     model_name = model_names)
     
     # Create a helper function for collecting the metrics 
     map_collect_metrics <- function(model){
@@ -538,8 +576,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
     }
     
     # Select the final model's specifications
-    final_model_spec <- models[models$model_name == bestclassifier, 
-    ][["model_spec"]][[bestclassifier]]
+    final_model_spec <- model_specs[bestclassifier][[1]]
     
     # Specify the final workflow
     final_wf <- workflow() %>%
@@ -562,8 +599,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
        for(model in models$model_name){
          
          # Extract the model specification
-         model_spec <- models[models$model_name == model, 
-                               ][["model_spec"]][[model]]
+         model_spec <- model_specs[model][[1]]
           
          # Specify the workflow object for each model
          wf <- workflow() %>%
@@ -642,8 +678,8 @@ classifier_predict <- function(final_model_fit, test_data){
 
 # Wrapper function for training and predicting in one go
 classify_articles <- function(data_separated, metric="roc_auc", fold=5,
-                              verbose=TRUE, fit_all=FALSE,
-                              models=c("xgboost", "dt", "fdm", "logit", "mars",
+                              verbose=TRUE, fit_all=FALSE, progress=FALSE,
+                              model_names=c("xgboost", "dt", "fdm", "logit", "mars",
                                        "nnet", "mr","knn", "rf", "svm_rbf")){
   
   # Splitting the PMIDs into training and testing data
@@ -658,8 +694,9 @@ classify_articles <- function(data_separated, metric="roc_auc", fold=5,
   # metric
   training_results <- train_classifiers(train_data = training_data, 
                                         eval_metric=metric, fold=fold,
-                                        models=models, verbose=verbose,
-                                        fit_all=)
+                                        verbose=verbose, fit_all=fit_all, 
+                                        progress=progress,
+                                        model_names=model_names)
   
   # Select best model
   best_model <- training_results$best_model
