@@ -56,9 +56,6 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
     setProgress(message = "Downloading articles from PubMed...",
                 detail = paste(retreived, "out of", N),
                 value = 0)
-    # Increment the progress bar, and update the detail text.
-    # incProgress(amount=0, 
-    #             detail = paste(retreived, "out of", N))
   }
 
   for(i in seq(1, N, by=chnk_len)){
@@ -205,8 +202,8 @@ pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
     
     if(progress){
       # Increment the progress bar, and update the detail text.
-      incProgress(amount=0, 
-                  detail = paste(retreived, "out of", total))
+      # incProgress(amount=0, 
+      #             detail = paste(retreived, "out of", total))
     }
     
     # If the number of PMIDs are greater than 1300, the retrievel from PubMed is 
@@ -229,9 +226,9 @@ pubmed_articles <- function(pmidPositive, pmidNegative, pmidTBD, verbose=FALSE,
         
         if(progress){
           # Increment the progress bar, and update the detail text.
-          retreived <- length(final_df$pmid)
-          incProgress(amount=articles/total, 
-                      detail=paste(retreived, " out of ", total))
+          # retreived <- length(final_df$pmid)
+          # incProgress(amount=articles/total, 
+          #             detail=paste(retreived, " out of ", total))
         }
       }
       end_time <- Sys.time()
@@ -332,7 +329,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
     bag_mars_spec <- bag_mars() %>%
         set_engine("earth") %>%
         set_mode("classification")
-    
+
     # Setting up Bagged Decision Tree Model
     bag_tree_spec <- bag_tree() %>%
         set_engine("rpart") %>%
@@ -349,8 +346,8 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
         set_mode("classification")
     
     # Setting up C5.0 Rule-Based Classification Model
-    c5_spec <- C5_rules() %>% 
-        set_engine("C5.0") %>% 
+    c5_spec <- C5_rules() %>%
+        set_engine("C5.0") %>%
         set_mode("classification")
     
     # Setting up Decision Tree Model
@@ -488,17 +485,19 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
     
     # Increase progress if running in Shiny
     if(progress){
+      
       # Increment the progress bar, and update the detail text.
-      incProgress(amount=0, 
-                  message = "Training classification models\\n",
+      setProgress(value=0,
+                  message = "Training classification models....",
                   detail = paste(0, "out of", num_models))
     }
     
     wtime <- system.time({
     for(i in 1:num_models){
       start.time <- Sys.time()
-      print(names(selected_model_specs[i]))
-      train_result <- fit_resamples(selected_model_specs[[i]],
+      model <- names(selected_model_specs[i])
+      print(model)
+      train_result <- fit_resamples(selected_model_specs[[model]],
                                     train_rec, 
                                     train_folds, 
                                     metrics = metrics,
@@ -511,7 +510,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
       # Increment the progress bar, and update the detail text.
       if(progress){
         incProgress(amount=1/num_models,
-                    message = "Training classification models\n",
+                    message = "Training classification models....",
                     detail=paste(i, "out of", num_models))
       }
     }
