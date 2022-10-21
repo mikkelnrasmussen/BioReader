@@ -77,41 +77,48 @@ ui <- (fluidPage(
                column(width = 5, offset = 0, style='padding:0px;', 
                       wellPanel(
                         h4("Positive category"),
-                        p("Paste PubMed IDs for papers containing information 
-                          relevant to you."), 
-                        p("For example", 
+                        p("Write a PubMed query or paste PubMed IDs for papers 
+                          containing information relevant to you."), 
+                        p("PubMed ID example", 
                           a("Click here.",
                             href = paste0("https://services.healthtech.dtu.dk/",
                                          "services/BioReader-1.2/ex_set1"), 
                             target="_blank")),
-                        textAreaInput(inputId = "pmidPositive", 
-                                      label = NULL, width = "400px", 
+                        textInput(inputId = "queryPositive",label=NULL,
+                                  placeholder = "Pubmed query...", width = "400px"),
+                        textAreaInput(inputId = "pmidPositive", label=NULL,
+                                      placeholder = "PubMed IDs...", width = "400px", 
                                       height = "180px", resize = "none"),
                         
                         h4("Negative category"),
-                        p("Paste PubMed IDs for papers similar to the positive 
-                          category, but not containing information relevant to 
-                          you."), 
-                        p("For example", 
+                        p("Write a PubMed query or paste PubMed IDs for papers 
+                          similar to the positive category, but not containing 
+                          information relevant to you."), 
+                        p("PubMed ID example", 
                           a("Click here.", 
                             href = paste0("https://services.healthtech.dtu.dk/",
                                           "services/BioReader-1.2/ex_set2"), 
                             target="_blank")),
-                        textAreaInput(inputId = "pmidNegative", 
-                                      label = NULL, width = "400px", 
+                        textInput(inputId = "queryNegative",label=NULL,
+                                  placeholder = "Pubmed query...", width = "400px"),
+                        textAreaInput(inputId = "pmidNegative", label = NULL, 
+                                      placeholder = "PubMed IDs...", width = "400px", 
                                       height = "180px", resize = "none"),
                      
                         h4("Documents to classify"),
-                        p("Paste PubMed IDs (max 1000) for articles that you 
+                        p("Paste PubMed IDs for articles that you 
                           would like to have classified as either relevant or 
                           irrelevant."), 
-                        p("For example", 
+                        p("PubMed ID example", 
                           a("Click here.", 
                             href = paste0("https://services.healthtech.dtu.dk/",
                                           "services/BioReader-1.2/ex_testset"), 
                             target="_blank")),
+                        textInput(inputId = "queryTBD", label=NULL,
+                                  placeholder = "Pubmed query...", width = "400px"),
                         textAreaInput(inputId = "pmidTBD", label = NULL, 
-                                      width = "400px", height = "180px", 
+                                      placeholder = "PubMed IDs...",width = "400px", 
+                                      height = "180px", 
                                       resize = "none"),
                      
                      actionButton(inputId = "submitPMID", label = "Submit Job"),
@@ -175,29 +182,53 @@ ui <- (fluidPage(
 
 server <- function(input, output, session){
   
-  # Reactive elements for checking the PMIDs have been supplied by the user
+  # Reactive elements for checking the PMIDs or queries have been supplied by the user
   posPMIDs <- reactive({
     validate(
-      need(input$pmidPositive != "", 
-           "Please write the PubMed IDs for the articles in the positive category"),
+      need(input$pmidPositive != "" || input$queryPositive != "", 
+           "Please write a query or the PubMed IDs for the articles in the positive category"),
     )
     input$pmidPositive
   })
   
+  posQuery <- reactive({
+    validate(
+      need(input$pmidPositive != "" || input$queryPositive != "", 
+           "Please write a query or the PubMed IDs for the articles in the positive category"),
+    )
+    input$queryPositive
+  })
+  
   negPMIDs <- reactive({
     validate(
-      need(input$pmidNegative != "", 
-           "Please write the PubMed IDs for the articles in the negative category"),
+      need(input$pmidNegative != "" || input$queryNegative != "", 
+           "Please write a query or the PubMed IDs for the articles in the negative category"),
     )
     input$pmidNegative
   })
   
+  negQuery <- reactive({
+    validate(
+      need(input$pmidNegative != "" || input$queryNegative != "", 
+           "Please write a query or the PubMed IDs for the articles in the negative category"),
+    )
+    input$queryNegative
+  })
+  
   tbdPMIDs <- reactive({
     validate(
-      need(input$pmidTBD != "", 
-           "Please write the PubMed IDs of the articles you wish to classify"),
+      need(input$pmidTBD != "" || input$queryTBD != "", 
+           "Please write a query or the PubMed IDs of the articles you wish to classify"),
     )
     input$pmidTBD
+  })
+  
+  tbdQuery <- reactive({
+    validate(
+      need(input$pmidTBD != "" || input$queryTBD != "", 
+           "Please write a query or the PubMed IDs of the articles you wish to classify"),
+    )
+    input$queryTBD
   })
   
   observeEvent(input$runtime, {
@@ -218,6 +249,9 @@ server <- function(input, output, session){
         retrive_articles(posPMIDs(), 
                          negPMIDs(), 
                          tbdPMIDs(),
+                         posQuery(),
+                         negQuery(),
+                         tbdQuery(),
                          verbose=TRUE,
                          shiny_input=TRUE,
                          progress=TRUE)

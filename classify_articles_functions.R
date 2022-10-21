@@ -1,6 +1,7 @@
 retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD, 
-                              verbose=FALSE, shiny_input=FALSE, 
-                              progress=FALSE){
+                             queryPositive="", queryNegative="", queryTBD="",
+                             verbose=FALSE, shiny_input=FALSE, 
+                             progress=FALSE){
   
   
   
@@ -15,26 +16,47 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
     }
   }
   
+  # If no PMIDs are supplied - set to NULL
+  if(is.character(pmidPositive) && pmidPositive == ""){pmidPositive <- NULL}
+  if(is.character(pmidNegative) && pmidNegative == ""){pmidNegative <- NULL}
+  if(is.character(pmidTBD) && pmidTBD == ""){pmidTBD <- NULL}
+  
   if(shiny_input){
-    # Using regex to find all PubMed IDs in input boxes and convert to lists 
+    # Using regex to find all PubMed IDs in input boxes and convert to a list 
     # - only used when the input is giving through the Shiny app
-    #if(!(is.integer(pmidPositive) & is.integer(pmidNegative) & is.integer(pmidTBD))){
-      pmidPositive <- str_match_all(pmidPositive, "\\d+")
-      pmidNegative <- str_match_all(pmidNegative, "\\d+")
-      pmidTBD <- str_match_all(pmidTBD, "\\d+")
-    #}
+    pmidPositive <- if(!is.null(pmidPositive)){str_extract_all(pmidPositive, "\\d+")}
+    pmidNegative <- if(!is.null(pmidNegative)){str_extract_all(pmidNegative, "\\d+")} 
+    pmidTBD <- if(!is.null(pmidTBD)){str_extract_all(pmidTBD, "\\d+")}
+  }
+  
+  # Extracting PMIDs from PubMed queries
+  if(queryPositive != ""){
+    posQueryIDs <- entrez_search(db="pubmed", term=queryPositive, retmax=10000)$ids
+  } else {
+    posQueryIDs <- NULL
+  }
+  
+  if(queryNegative != ""){
+    negQueryIDs <- entrez_search(db="pubmed", term=queryNegative, retmax=10000)$ids
+  } else {
+    negQueryIDs <- NULL
+  }
+  if(queryTBD != ""){
+    tbdQueryIDs <- entrez_search(db="pubmed", term=queryTBD, retmax=10000)$ids
+  } else {
+    tbdQueryIDs <- NULL
   }
   
   # Storing PMIDs and class in dataframes
-  indexPos <- as.data.frame(pmidPositive)
+  indexPos <- as.data.frame(c(pmidPositive, posQueryIDs))
   indexPos$class <- 1
   names(indexPos) <- c("pmid", "class")
   
-  indexNeg <- as.data.frame(pmidNegative)
+  indexNeg <- as.data.frame(c(pmidNegative, negQueryIDs))
   indexNeg$class <- 0
   names(indexNeg) <- c("pmid", "class")
   
-  indexTBD <- as.data.frame(pmidTBD)
+  indexTBD <- as.data.frame(c(pmidTBD, tbdQueryIDs))
   indexTBD$class <- 2
   names(indexTBD) <- c("pmid", "class")
   
@@ -67,14 +89,17 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
       stop <- N
     }
     
-    # Define url with PMIDs and parse from PubMed
+    # Select a subset of PMIDs to be downloaded
     current_ids <- paste0(all_ids[start:stop], collapse=",")
+    
+    # Define url with PMIDs and parse from PubMed
+    api_key <- "cb3f7db995488faf13d1996de6a08a200a08"
     url <- paste0("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db",
-                  "=pubmed&id=", current_ids,"&retmode=abstract&rettype=xml")
+                  "=pubmed&id=", current_ids, "&retmode=abstract&rettype=xml",
+                  "&api_key=", api_key)
     
     # Set up retry procedure should the connection fail
     maxTimes <- 5
-    
     req <- RETRY(verb = "GET", url = url, times = maxTimes, 
                  quiet = FALSE, terminate_on = NULL)
     main_node <- xml2::read_xml(req) %>% xml_children()
@@ -115,13 +140,13 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
   
   # Filter df_final, index and info based on the pmids for articles
   # with missing abstracts 
-  df_final <- filter(df_final, !(pmid %in% missing_pmids))
+  df_final <- df_final %>% filter(!(pmid %in% missing_pmids))
   if(verbose){
     frac_retrieved <- sum(df_final$pmid %in% index$pmid)/length(index$pmid)
     print(paste0("Procent of PubMed articles with abstract: ", 
                  round(frac_retrieved, 4)*100, "%"))
   }
-  index <- filter(index, !(pmid %in% missing_pmids))
+  index <- index %>% filter(!(pmid %in% missing_pmids))
   
   # Join information retreived from PubMed with class labels
   index$pmid <- as.character(index$pmid)
