@@ -29,9 +29,9 @@ Before using BioReader you must prepare your datasets. The training data must be
 
 <center>
 <figure>
-<img src="pubmedID.png"
+<img src="pubmedID_new.png"
      alt="PudMedIDs"
-     style="width:800px;height:400px;"
+     style="width:600px;height:500px;"
      class="center" />
 <i><figcaption>Figure 1: Saving PubMed IDs for a keyword search in PubMed.</figcaption></i>
 </figure>
