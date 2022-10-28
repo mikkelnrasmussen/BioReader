@@ -11,17 +11,8 @@ library(tidyr)
 library(textrecipes) # not on DTU server
 library(tidymodels) # not on DTU server
 library(discrim) # not on DTU server
-library(plsmod) # not on DTU server
-
-# library(mixOmics)
-# library(parallel)
-# library(doMC)
-# library(easyPubMed)
-# library(plyr)
-# library(rules)
-# library(baguette)
-# library(doParallel)
-# library(data.table)
+library(plsmod) # not on DTU Heath Tech server
+library(plyr)
 
 source("classify_articles_functions.R")
 
@@ -39,7 +30,7 @@ all_neg <- read.table(file.path("data", "allergy_negative.txt"))
 N <- dim(all_pos)[1]
 df_time <- data.frame()
 
-for(i in seq(1, N, by=100)){
+for(i in seq(1, N, by=50)){
 start.time <- Sys.time()
 if(download_articles){
   
@@ -143,8 +134,9 @@ if(train_model){
   # metric
   training_results <- train_classifiers(train_data = training_data, 
                                         eval_metric="roc_auc", 
+                                        seed_num=123,
                                         verbose=TRUE, 
-                                        fit_all=FALSE,
+                                        fit_all=TRUE,
                                         model_names=c("bart", "xgboost", "ldm", "logit",
                                                       "mr", "nb","knn", "rf", "pls", 
                                                       "svm_linear")
@@ -182,7 +174,8 @@ pred_test <- prediction_results$pred
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
-tmp <- data.frame(data=stop_index, time=time.taken)
+data_amount <- length(current_pos_pmids) + length(current_neg_pmids)
+tmp <- data.frame(data=data_amount, time=time.taken)
 df_time <- rbind(df_time, tmp)
 
 }
