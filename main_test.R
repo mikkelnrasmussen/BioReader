@@ -1,45 +1,66 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ## Call libraries
-library(parallel)
-library(doMC)
-library(easyPubMed)
+library(httr) 
 library(dplyr)
-library(plyr)
-library(tidyr)
-library(stringr)
-library(tidymodels)
-library(textrecipes)
-library(discrim)
-library(plsmod)
-library(rules)
-library(baguette)
-library(doParallel)
-library(data.table)
-library(httr)
 library(xml2)
+library(purrr)
+library(stringr)
+library(rentrez) # not on DTU server
+library(tidyr)
+library(textrecipes) # not on DTU server
+library(tidymodels) # not on DTU server
+library(discrim) # not on DTU server
+library(plsmod) # not on DTU server
+
+# library(mixOmics)
+# library(parallel)
+# library(doMC)
+# library(easyPubMed)
+# library(plyr)
+# library(rules)
+# library(baguette)
+# library(doParallel)
+# library(data.table)
 
 source("classify_articles_functions.R")
 
 # Whether to train, save or load models
-train_model <- FALSE
+train_model <- TRUE
 save_model <- FALSE
-load_model <- TRUE
+load_model <- FALSE
 
 # Whether to test the pubmed_articles function or not 
-download_articles <- FALSE
+download_articles <- TRUE
 
+# Load the datasets
+all_pos <- read.table(file.path("data", "allergy_positive.txt"))
+all_neg <- read.table(file.path("data", "allergy_negative.txt"))
+N <- dim(all_pos)[1]
+df_time <- data.frame()
 
+for(i in seq(1, N, by=100)){
+start.time <- Sys.time()
 if(download_articles){
-  # Load the datasets
-  all_pos <- read.table(file.path("data", "allergy_positive.txt"))
-  all_neg <- read.table(file.path("data", "allergy_negative.txt"))
+  
+  start_index <- 1
+  stop_index <- i + 100 - 1
+  if(stop_index > N){
+    stop_index <- N
+  }
+  
+  current_pos_pmids <- all_pos[start_index:stop_index,]
+  current_neg_pmids <- all_neg[start_index:stop_index,]
   
   # Split the positive and negative cases to make a pseudo-TBD group
-  tbd_pmids <- all_pos[1:100,] %>% append(all_neg[1:100,])
-  pos_pmids <- all_pos[501:1000,]
-  neg_pmids <- all_neg[501:1000,]
-  
+  train_prct <- 0.8
+  train_index <- start_index:as.numeric(stop_index*train_prct)
+  test_index <- as.numeric((stop_index*train_prct)+1):stop_index
+  pos_pmids <- current_pos_pmids[train_index]
+  neg_pmids <- current_neg_pmids[train_index]
+  tbd_pmids <- c(current_pos_pmids[test_index], 
+                 current_neg_pmids[test_index])
+
   # Provide the PMIDs positive and negative for the information and the PMIDs for 
   # the articles that needs to be determined. The input right now is strings with 
   # the PMIDs, since we are working with input through a Shiny app.
@@ -50,12 +71,12 @@ if(download_articles){
                                 progress=FALSE,
                                 shiny_input = FALSE)
   
-  sum(pmid_data$class == 0)
   sum(pmid_data$class == 1)
+  sum(pmid_data$class == 0)
   sum(pmid_data$class == 2)
   
   test_class <- pmid_data[pmid_data$class == 2, ]
-  test_class$class <- ifelse(test_class$pmid %in% all_pos[1:100,],
+  test_class$class <- ifelse(test_class$pmid %in% current_pos_pmids,
                              "Positive", "Negative")
   test_class$class <- factor(test_class$class, levels = c("Positive", "Negative"))
   true_classes <- test_class[, c('pmid', 'class')]
@@ -122,13 +143,19 @@ if(train_model){
   # metric
   training_results <- train_classifiers(train_data = training_data, 
                                         eval_metric="roc_auc", 
-                                        verbose=TRUE, fit_all=TRUE)
+                                        verbose=TRUE, 
+                                        fit_all=FALSE,
+                                        model_names=c("bart", "xgboost", "ldm", "logit",
+                                                      "mr", "nb","knn", "rf", "pls", 
+                                                      "svm_linear")
+                                        )
   
   # Collect model(s), metrics and predictions
   metrics <- training_results$model_metrics
   pred_train <- training_results$model_predictions
   final_model <- training_results$best_model
-  fitted_models <- training_results$fitted_models}
+  fitted_models <- training_results$fitted_models
+  }
 
 
 # Save final model
@@ -151,6 +178,45 @@ prediction_results <- classifier_predict(final_model_fit=final_model,
                                          test_data=testing_data)
 ranked_results <- prediction_results$ranked_results
 pred_test <- prediction_results$pred
+
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+tmp <- data.frame(data=stop_index, time=time.taken)
+df_time <- rbind(df_time, tmp)
+
+}
+
+saveRDS(df_time, "bioreader_time.rds")
+
+library(ggplot2)
+library(ggthemes)
+df_time %>% 
+  ggplot(aes(x=data, y=as.numeric(time))) +
+  geom_point(size=3, color = "#0277bd") +
+  #geom_line(color = "#0277bd", linetype = "dotted", size = .5) + 
+  geom_smooth(formula = 'y ~ x', method = "lm", color = "#0277bd", 
+              linetype = "dotted", size = .5) + 
+  labs(title="Expected runtime of BioReader-2.0",
+       y="Time (min)", 
+       x="Number of abstracts",
+       caption = "The runtime may vary due to server load") +
+  theme(axis.title.x = element_text(margin = margin(t = 10), size = 12,
+                                    family = "Times New Roman"),
+        axis.title.y = element_text(margin = margin(r = 10), size = 12,
+                                    family = "Times New Roman",),
+        axis.text = element_text(size = 12, family = "Times New Roman",),
+        plot.title = element_text(face = "bold",
+                                  family = "Times New Roman",
+                                  margin = margin(10, 0, 10, 0),
+                                  size = 16),
+        plot.caption = element_text(hjust = 0, family = "Times New Roman"),
+        panel.background = element_rect(fill = NA),
+        plot.background = element_rect(fill = "#DEDEDE",
+                                       color = "#DEDEDE", size = 2)) + 
+  scale_x_continuous(breaks = round(seq(min(df_time$data), max(df_time$data), 
+                                        by = 100), 1))#+ theme_economist()
+ggsave("BioReader_runtime.png", width = 10, height = 7)
 
 # Evaluate the models on the training and test data
 evaluation_plots <- evaluate_models(test_data=testing_data, pred_train = pred_train,
