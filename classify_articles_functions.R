@@ -32,17 +32,26 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
   # Extracting PMIDs from PubMed queries
   if(queryPositive != ""){
     posQueryIDs <- entrez_search(db="pubmed", term=queryPositive, retmax=10000)$ids
+    if(length(posQueryIDs) == 0) {
+      stop("The query for the positive category was unsuccessful. Try another query.")
+      }
   } else {
     posQueryIDs <- NULL
   }
   
   if(queryNegative != ""){
     negQueryIDs <- entrez_search(db="pubmed", term=queryNegative, retmax=10000)$ids
+    if(length(negQueryIDs) == 0) {
+      stop("The query for the negative category was unsuccessful. Try another query.")
+    }
   } else {
     negQueryIDs <- NULL
   }
   if(queryTBD != ""){
     tbdQueryIDs <- entrez_search(db="pubmed", term=queryTBD, retmax=10000)$ids
+    if(length(tbdQueryIDs) == 0) {
+      stop("The query for the documents to be classified was unsuccessful. Try another query.")
+    }
   } else {
     tbdQueryIDs <- NULL
   }
@@ -645,8 +654,8 @@ classifier_predict <- function(final_model_fit, test_data){
 classify_articles <- function(data_separated, metric="roc_auc", fold=5,
                               verbose=TRUE, fit_all=FALSE, progress=FALSE,
                               model_names=c('bart','xgboost', 'ldm', 'logit', 
-                                            'mr', 'nb', 'knn', 'null', 'pls', 
-                                            'rf', 'svm_linear')){
+                                            'mr', 'nb', 'knn', 'null', 'pls',
+                                            'rf','svm_linear')){
   
   # Splitting the PMIDs into training and testing data
   training_data <- tibble(data_separated$train_data)
@@ -679,7 +688,7 @@ evaluate_models <- function(pred_train=NULL, test_data=NULL, fitted_models=NULL,
    
    # Create dataframe for mapping between model abbreviations and names
    models_map <- data.frame(model_name=c('bart','xgboost', 'ldm', 'logit', 
-                                          'mr', 'nb', 'knn', 'pls', 'rf', 
+                                          'mr', 'nb', 'knn', 'null','pls', 'rf', 
                                          'svm_linear'),
                             Model=c('Bayesian additive regression trees (BART)',
                                     'Boosted Trees', 'Linear Discriminant',
@@ -725,8 +734,8 @@ evaluate_models <- function(pred_train=NULL, test_data=NULL, fitted_models=NULL,
         theme(legend.position="none") +
         geom_text(data=auc_metrics, x=0.75, y=0.25, size=3, 
                   aes(label=label.auc), inherit.aes = F) + 
-        labs(title='ROC curves across the 10-fold cross-validation for training data',
-             subtitle='Mean AUC scores across the 10 cross-validation folds')
+        labs(title='ROC curves across the 5-fold cross-validation for training data',
+             subtitle='Mean AUC scores across the 5 cross-validation folds')
      
      print(train_plot)
    }
@@ -832,9 +841,12 @@ evaluate_models <- function(pred_train=NULL, test_data=NULL, fitted_models=NULL,
                     columnDefs = list(list(className = 'dt-left', targets = 0:2))
                  ))
    
-   selected.models <- c("Random Forest", "Neural Network", 
-                        "Radial Basis Function SVM", "RuleFit", "Naive Bayes", 
-                        "K-Nearest Neighbors")
+   top_models <- all_metrics %>% 
+     slice_max(order_by=.estimate, n = 3, with_ties=F)
+   bottom_models <- all_metrics %>% 
+     slice_min(order_by=.estimate, n = 3, with_ties=F)
+   
+   selected.models <- c(top_models$Model, bottom_models$Model)
    
    # Generate plot of the ROC curves for each model on the test data
    df.roc.test.compare <- df.roc.test %>% filter(Model %in% selected.models)
