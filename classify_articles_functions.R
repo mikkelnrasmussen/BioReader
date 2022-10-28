@@ -333,7 +333,7 @@ split_data <- function(data){
 train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
                               fit_all=FALSE, seed_num=FALSE, fold=5, progress=FALSE,
                               model_names=c('bart','xgboost', 'ldm', 'logit', 
-                                            'mr', 'nb', 'knn', 'null', 'pls', 
+                                            'mr', 'nb', 'knn', 'null', 'pls',
                                             'rf','svm_linear')){ 
     
    # Creating recipe and specifying outcome and predictors and setting pmids as 
@@ -347,7 +347,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
         step_stem(abstract) %>%
         step_tokenfilter(abstract, max_tokens = 500) %>%
         step_tfidf(abstract)
-  
+
     # Setting up Bayesian additive regression trees (BART)
     bart_spec <- parsnip::bart() %>% 
       set_engine("dbarts") %>% 
@@ -644,8 +644,9 @@ classifier_predict <- function(final_model_fit, test_data){
 # Wrapper function for training and predicting in one go
 classify_articles <- function(data_separated, metric="roc_auc", fold=5,
                               verbose=TRUE, fit_all=FALSE, progress=FALSE,
-                              model_names=c("xgboost", "dt", "fdm", "logit", "mars",
-                                       "nnet", "mr","knn", "rf", "svm_rbf")){
+                              model_names=c('bart','xgboost', 'ldm', 'logit', 
+                                            'mr', 'nb', 'knn', 'null', 'pls', 
+                                            'rf', 'svm_linear')){
   
   # Splitting the PMIDs into training and testing data
   training_data <- tibble(data_separated$train_data)
@@ -677,17 +678,15 @@ evaluate_models <- function(pred_train=NULL, test_data=NULL, fitted_models=NULL,
                             metrics, classes){
    
    # Create dataframe for mapping between model abbreviations and names
-   models_map <- data.frame(model_name=c('bart','xgboost', 'ldm', 'logit', 'mr', 
-                                         'nb', 'knn', 'null', 'pls', 'rf',
+   models_map <- data.frame(model_name=c('bart','xgboost', 'ldm', 'logit', 
+                                          'mr', 'nb', 'knn', 'pls', 'rf', 
                                          'svm_linear'),
                             Model=c('Bayesian additive regression trees (BART)',
-                                    'Boosted Trees', 
-                                    'Linear Discriminant',
+                                    'Boosted Trees', 'Linear Discriminant',
                                     'Logistic Regression', 'Multinomial Regression', 
-                                    'Naive Bayes', 
-                                    'K-Nearest Neighbors', 'Null model',
-                                    'Partial least squares (PLS)', 'Random Forest', 
-                                    'Linear support vector machines'))
+                                    'Naive Bayes', 'K-Nearest Neighbors', 
+                                    'Null model','Partial least squares (PLS)', 
+                                    'Random Forest', 'Linear support vector machines'))
    
    # Subset mapping table to the trained models
    models_map <- models_map[models_map$model_name 
