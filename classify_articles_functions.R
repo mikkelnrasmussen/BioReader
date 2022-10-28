@@ -406,7 +406,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
         set_mode("classification")
     
     # Setting up the Single Layer Neural Network (NNET model)
-    nnet_spec <- mlp(epochs = 50, hidden_units = 10,  activation = "relu") %>%
+    nnet_spec <- mlp(epochs = 50, hidden_units = 10, activation = "relu") %>%
         set_engine("keras") %>%
         set_mode("classification")
     
