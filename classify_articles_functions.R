@@ -331,7 +331,7 @@ split_data <- function(data){
 }
 
 train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
-                              fit_all=FALSE, seed_num=123, fold=5, progress=FALSE,
+                              fit_all=FALSE, seed_num=FALSE, fold=5, progress=FALSE,
                               model_names=c('bag_mars', 'bag_tree', 'bart','xgboost', 
                                        'c5', 'dt', 'fdm', 'ldm', 'rdm',
                                        'logit', 'mars', 'nnet', 'mr', 
@@ -406,7 +406,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
         set_mode("classification")
     
     # Setting up the Single Layer Neural Network (NNET model)
-    nnet_spec <- mlp(epochs = 50, hidden_units = 10, activation = "relu") %>%
+    nnet_spec <- mlp(epochs = 50, hidden_units = 10,  activation = "relu") %>%
         set_engine("keras") %>%
         set_mode("classification")
     
@@ -475,7 +475,9 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
     selected_model_specs <- model_specs[names(model_specs) %in% model_names]
     
     # Evaluating model proformance with 10-fold cross-validation resampling
-    set.seed(seed_num)
+    if(seed_num){
+      set.seed(seed_num)
+    }
     train_folds <- vfold_cv(train_data, v = fold, repeats = 1)
     
     # Evaluation metrics and save predictions
