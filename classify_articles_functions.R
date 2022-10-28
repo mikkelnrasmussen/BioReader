@@ -332,11 +332,9 @@ split_data <- function(data){
 
 train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
                               fit_all=FALSE, seed_num=FALSE, fold=5, progress=FALSE,
-                              model_names=c('bag_mars', 'bag_tree', 'bart','xgboost', 
-                                       'c5', 'dt', 'fdm', 'ldm', 'rdm',
-                                       'logit', 'mars', 'nnet', 'mr', 
-                                       'nb', 'knn', 'null', 'pls', 'rf', 'rule', 
-                                       'svm_linear' ,'svm_rbf', 'svm_poly')){ 
+                              model_names=c('bart','xgboost', 'ldm', 'logit', 
+                                            'mr', 'nb', 'knn', 'null', 'pls', 
+                                            'rf','svm_linear')){ 
     
    # Creating recipe and specifying outcome and predictors and setting pmids as 
    # id variable. Preprocessing steps are also determined here. 
@@ -349,17 +347,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
         step_stem(abstract) %>%
         step_tokenfilter(abstract, max_tokens = 500) %>%
         step_tfidf(abstract)
-    
-    # Setting up Bagged MARS Model
-    bag_mars_spec <- bag_mars() %>%
-        set_engine("earth") %>%
-        set_mode("classification")
-
-    # Setting up Bagged Decision Tree Model
-    bag_tree_spec <- bag_tree() %>%
-        set_engine("rpart") %>%
-        set_mode("classification")
-    
+  
     # Setting up Bayesian additive regression trees (BART)
     bart_spec <- parsnip::bart() %>% 
       set_engine("dbarts") %>% 
@@ -370,44 +358,14 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
         set_engine("xgboost") %>% 
         set_mode("classification")
     
-    # Setting up C5.0 Rule-Based Classification Model
-    c5_spec <- C5_rules() %>%
-        set_engine("C5.0") %>%
-        set_mode("classification")
-    
-    # Setting up Decision Tree Model
-    dt_spec <- decision_tree() %>% 
-        set_engine("C5.0") %>% 
-        set_mode("classification")
-    
-    # Setting up Flexible Discriminant analysis model
-    fdm_spec <- discrim_flexible() %>% 
-        set_engine("earth") %>% 
-        set_mode("classification")
-    
     # Setting up Linear Discriminant analysis model
     ldm_spec <- discrim_linear() %>% 
         set_engine("MASS") %>% 
         set_mode("classification")
     
-    # Setting up Regularized Discriminant Model
-    rdm_spec <- discrim_regularized(frac_common_cov=0, frac_identity=0.25) %>%
-        set_engine("klaR") %>%
-        set_mode("classification")
-    
     # Setting up the Logistic Regression Model
     logit_spec <- logistic_reg(penalty = 0.1, mixture = 0.5) %>%
         set_engine("glmnet") %>% 
-        set_mode("classification")
-    
-    # Setting up MARS
-    mars_spec <- parsnip::mars() %>% 
-        set_engine("earth") %>% 
-        set_mode("classification")
-    
-    # Setting up the Single Layer Neural Network (NNET model)
-    nnet_spec <- mlp(epochs = 50, hidden_units = 10,  activation = "relu") %>%
-        set_engine("keras") %>%
         set_mode("classification")
     
     # Setting up Multinomial Regression Model
@@ -440,36 +398,17 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
         set_engine("ranger") %>%
         set_mode("classification")
     
-    # Setting up RuleFit Models
-    rule_spec <- rule_fit() %>% 
-        set_engine("xrf") %>% 
-        set_mode("classification")
-    
     # Setting up the Linear support vector machines (SVM)
     svm_linear_spec <- svm_linear() %>%
       set_engine("kernlab") %>%
       set_mode("classification")
     
-    # Setting up the Polynomial support vector machines (SVM)
-    svm_poly_spec <- svm_poly() %>%
-        set_engine("kernlab") %>%
-        set_mode("classification")
-     
-    # Setting up the Radial basis function support vector machines (SVM) model
-    svm_rbf_spec <- svm_rbf(cost = 0.5) %>%
-        set_engine("kernlab") %>%
-        set_mode("classification")
-    
     # List with all of the model specifications
-    model_specs <- list(bag_mars = bag_mars_spec, bag_tree = bag_tree_spec,
-                        bart = bart_spec, xgboost = xgboost_spec, c5 = c5_spec, 
-                        dt = dt_spec, fdm = fdm_spec, ldm = ldm_spec, 
-                        rdm = rdm_spec, logit = logit_spec, 
-                        mars = mars_spec, nnet = nnet_spec, 
+    model_specs <- list(bart = bart_spec, xgboost = xgboost_spec, 
+                        ldm = ldm_spec, logit = logit_spec, 
                         mr = mr_spec, nb = nb_spec, knn = knn_spec, 
                         null = null_spec, pls = pls_spec, rf = rf_spec, 
-                        rule = rule_spec, svm_linear = svm_linear_spec, 
-                        svm_poly = svm_poly_spec, svm_rbf = svm_rbf_spec)
+                        svm_linear = svm_linear_spec)
     
     # Include only the specified models
     selected_model_specs <- model_specs[names(model_specs) %in% model_names]
@@ -732,32 +671,23 @@ classify_articles <- function(data_separated, metric="roc_auc", fold=5,
                                            test_data=testing_data)
   
   return(prediction_results)
-  
 }
 
 evaluate_models <- function(pred_train=NULL, test_data=NULL, fitted_models=NULL, 
                             metrics, classes){
    
    # Create dataframe for mapping between model abbreviations and names
-   models_map <- data.frame(model_name=c('bag_mars', 'bag_tree', 'bart','xgboost', 
-                                         'c5', 'dt', 'fdm', 'ldm', 'rdm',
-                                         'logit', 'mars', 'nnet', 'mr', 
-                                         'nb', 'knn', 'null', 'pls', 'rf', 'rule', 
-                                         'svm_linear' ,'svm_rbf', 'svm_poly'),
-                            Model=c('Bagged MARS', 'Bagged Decision Tree', 
-                                    'Bayesian additive regression trees (BART)',
-                                    'Boosted Trees', 'C5.0 Rule-Based', 
-                                    'Decision Tree', 'Flexible Discriminant',
+   models_map <- data.frame(model_name=c('bart','xgboost', 'ldm', 'logit', 'mr', 
+                                         'nb', 'knn', 'null', 'pls', 'rf',
+                                         'svm_linear'),
+                            Model=c('Bayesian additive regression trees (BART)',
+                                    'Boosted Trees', 
                                     'Linear Discriminant',
-                                    'Regularized Discriminant Model', 
-                                    'Logistic Regression', 'MARS', 
-                                    'Neural Network', 'Multinomial Regression', 
+                                    'Logistic Regression', 'Multinomial Regression', 
                                     'Naive Bayes', 
                                     'K-Nearest Neighbors', 'Null model',
                                     'Partial least squares (PLS)', 'Random Forest', 
-                                    'RuleFit', 'Linear support vector machines',
-                                    'Radial Basis Function SVM', 
-                                    'Polynomial SVM'))
+                                    'Linear support vector machines'))
    
    # Subset mapping table to the trained models
    models_map <- models_map[models_map$model_name 
