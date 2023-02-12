@@ -1,34 +1,32 @@
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ## Call libraries
-library(parallel)
-library(doMC)
-library(easyPubMed)
-library(dplyr)
-library(plyr)
-library(tidyr)
-library(stringr)
-library(tidymodels)
-library(textrecipes)
-library(discrim)
-library(plsmod)
-library(rules)
-library(baguette)
-library(doParallel)
-library(data.table)
 library(httr)
+library(dplyr)
 library(xml2)
+library(purrr)
+library(stringr)
+library(rentrez) # not on DTU server
+library(tidyr)
+library(textrecipes) # not on DTU server
+library(tidymodels) # not on DTU server
+library(discrim) # not on DTU server
+library(plsmod) # not on DTU Heath Tech server
+library(plyr)
+library(baguette)
+library(rules)
 
 source("classify_articles_functions.R")
 
 # Whether to train, save or load models
-train_model <- FALSE
-save_model <- FALSE
-load_model <- TRUE
+train_model <- TRUE
+save_model <- TRUE
+load_model <- FALSE
+multiple_classes <- TRUE
+multi_core <- TRUE
 
 # Whether to test the pubmed_articles function or not 
 download_articles <- FALSE
-
 
 if(download_articles){
   # Load the datasets
@@ -59,6 +57,65 @@ if(download_articles){
                              "Positive", "Negative")
   test_class$class <- factor(test_class$class, levels = c("Positive", "Negative"))
   true_classes <- test_class[, c('pmid', 'class')]
+  
+} else if (multiple_classes){
+  library(readxl)
+  file_names <- dir("data/training_data/", full.names = TRUE)
+  df_all_classes <- do.call(rbind, lapply(file_names, read.csv))
+  df_class_label <- read_excel("data/All_Updated_Categories_2019.xlsx")
+  
+  df_main_classes <- df_all_classes %>% 
+    full_join(., df_class_label,
+              by=c("SubType" = "Abbreviation"))
+  
+  df_main_classes %>% 
+    filter(is.na(Class)) %>% 
+    select(SubType) %>% 
+    dplyr::count(SubType, sort=TRUE)
+  
+  # df_all_classes %>% 
+  #   dplyr::count(SubType, sort=TRUE) %>% 
+  #   View()
+  
+  df_main_classes %>% 
+    dplyr::count(Class, sort=TRUE)
+  
+  # df_main_classes %>% 
+  #   filter(is.na(SubType)) %>% 
+  #   View()
+  
+  df_main_classes <- df_main_classes %>% 
+    select(-c(SubType, Category, Subcategory)) %>% 
+    drop_na() %>% 
+    dplyr::rename(pmid = PubMed_ID) %>% 
+    dplyr::rename_with(tolower)
+  
+  colSums(is.na(df_main_classes))
+  
+  df_main_classes %>% 
+    dplyr::count(class, sort=TRUE)
+  
+  df_all_classes <- df_all_classes %>% 
+    drop_na() %>% 
+    dplyr::rename(pmid = PubMed_ID) %>% 
+    dplyr::rename(class = SubType) %>% 
+    dplyr::rename_with(tolower) 
+  
+  # # Small classes
+  # small_classes <- df_all_classes %>% 
+  #   dplyr::count(class) %>% 
+  #   filter(n < 20)
+  # 
+  # df_all_classes <- df_all_classes %>% 
+  #   dplyr::filter(!(class %in% small_classes$class))
+  # 
+  # df_all_classes %>% 
+  #   dplyr::count(class, sort=TRUE)
+  
+  set.seed(123)
+  split <- initial_split(df_main_classes, strata = class, prop = 0.80)
+  training_data <- training(split)
+  testing_data <- testing(split)
   
 } else {
   
@@ -108,21 +165,27 @@ if(download_articles){
   
 }
 
-# Splitting the PMIDs into training and testing data
-data_separated <- split_data(data=pmid_data)
-training_data <- tibble(data_separated$train_data)
-testing_data <- tibble(data_separated$test_data)
-
-sum(training_data$class == 'Positive')
-sum(training_data$class == 'Negative')
-dim(testing_data)
+if(!multiple_classes){
+  # Splitting the PMIDs into training and testing data
+  data_separated <- split_data(data=pmid_data)
+  training_data <- tibble(data_separated$train_data)
+  testing_data <- tibble(data_separated$test_data)
+  
+  sum(training_data$class == 'Positive')
+  sum(training_data$class == 'Negative')
+  dim(testing_data)
+}
 
 if(train_model){
   # Training the classifiers and select the best classifier based on specified 
   # metric
   training_results <- train_classifiers(train_data = training_data, 
                                         eval_metric="roc_auc", 
-                                        verbose=TRUE, fit_all=TRUE)
+                                        binary_classify = FALSE,
+                                        seed_num=123,
+                                        verbose=TRUE, 
+                                        fit_all=FALSE,
+                                        model_names = c("rf"))
   
   # Collect model(s), metrics and predictions
   metrics <- training_results$model_metrics
@@ -133,27 +196,28 @@ if(train_model){
 
 # Save final model
 if(save_model){
-  saveRDS(training_results, "full_model_object.rds")
-  saveRDS(final_model, "rf_pred_model_full.rds")
+  saveRDS(training_results, "class_multiclass_model_object.rds")
+  #saveRDS(final_model, "subtype_multiclass_model.rds")
   
 }
 
 if(load_model){
-  final_model_list <- readRDS("rf_pred_model.rds")
+  final_model_list <- readRDS("class_multiclass_model_up_object.rds")
   metrics <- final_model_list$model_metrics
   pred_train <- final_model_list$model_predictions
   final_model <- final_model_list$best_model
   fitted_models <- final_model_list$fitted_models
 }
 
-# Predict classes for the test data and extract results
-prediction_results <- classifier_predict(final_model_fit=final_model, 
-                                         test_data=testing_data)
-ranked_results <- prediction_results$ranked_results
-pred_test <- prediction_results$pred
-
-# Evaluate the models on the training and test data
-evaluation_plots <- evaluate_models(test_data=testing_data, pred_train = pred_train,
-                                    fitted_models=fitted_models, 
-                                    metrics=metrics, classes=true_classes)
+# # Predict classes for the test data and extract results
+# prediction_results <- classifier_predict(final_model_fit=final_model, 
+#                                          test_data=testing_data)
+# ranked_results <- prediction_results$ranked_results
+# pred_test <- prediction_results$pred
+# 
+# # Evaluate the models on the training and test data
+# evaluation_plots <- evaluate_models(test_data=testing_data, 
+#                                     pred_train = pred_train,
+#                                     fitted_models=fitted_models, 
+#                                     metrics=metrics, classes=NULL)
 
