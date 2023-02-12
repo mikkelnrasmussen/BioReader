@@ -79,7 +79,7 @@ retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD,
                 detail = paste(retreived, "out of", N),
                 value = 0)
   }
-
+  
   for(i in seq(1, N, by=chnk_len)){
     
     # Setting indexes for articles to be retrieved
@@ -330,25 +330,46 @@ split_data <- function(data){
    return(out)
 }
 
-train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
-                              fit_all=FALSE, seed_num=FALSE, fold=5, progress=FALSE,
+train_classifiers <- function(train_data, eval_metric, verbose=FALSE, 
+                              binary_classify=TRUE, fit_all=FALSE, seed_num=FALSE, 
+                              fold=5, progress=FALSE,
                               model_names=c('bag_mars', 'bag_tree', 'bart','xgboost', 
                                        'c5', 'dt', 'fdm', 'ldm', 'rdm',
                                        'logit', 'mars', 'nnet', 'mr', 
                                        'nb', 'knn', 'null', 'pls', 'rf', 'rule', 
                                        'svm_linear' ,'svm_rbf', 'svm_poly')){ 
+  if(binary_classify){
+    # Creating recipe and specifying outcome and predictors and setting pmids as 
+    # id variable. Preprocessing steps are also determined here. 
+    train_data <- train_data[, c('pmid', 'abstract', 'class')]
+    train_rec <-
+      recipe(class ~ ., data = train_data) %>% 
+      update_role(pmid, new_role = "id") %>% 
+      step_tokenize(abstract) %>% 
+      step_stopwords(abstract) %>%
+      step_stem(abstract) %>%
+      step_tokenfilter(abstract, max_tokens = 500) %>%
+      step_tfidf(abstract)
+  } else {
     
-   # Creating recipe and specifying outcome and predictors and setting pmids as 
-   # id variable. Preprocessing steps are also determined here. 
-   train_data <- train_data[, c('pmid', 'abstract', 'class')]
-   train_rec <-
-        recipe(class ~ ., data = train_data) %>% 
-        update_role(pmid, new_role = "id") %>% 
-        step_tokenize(abstract) %>% 
-        step_stopwords(abstract) %>%
-        step_stem(abstract) %>%
-        step_tokenfilter(abstract, max_tokens = 500) %>%
-        step_tfidf(abstract)
+    library(themis)
+    train_data <- train_data[, c('pmid', 'abstract', 'class')]
+    train_rec <-
+      recipe(class ~ ., data = train_data) %>% 
+      update_role(pmid, new_role = "id") %>% 
+      step_tokenize(abstract) %>% 
+      step_stopwords(abstract) %>%
+      step_stem(abstract) %>%
+      step_tokenfilter(abstract, max_tokens = 500) %>%
+      step_tfidf(abstract) %>% 
+      step_downsample(class)
+      
+    # train_prep <- prep(train_rec)
+    # juice(train_prep) %>%
+    #   dplyr::count(class) %>%
+    #   View()
+  
+  }
     
     # Setting up Bagged MARS Model
     bag_mars_spec <- bag_mars() %>%
@@ -479,108 +500,191 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
       set.seed(seed_num)
     }
     train_folds <- vfold_cv(train_data, v = fold, repeats = 1)
+    # train_folds <- validation_split(train_data, prop = 0.8)
     
     # Evaluation metrics and save predictions
     metrics = metric_set(roc_auc, sens, spec, accuracy, precision)
-    control <- control_resamples(save_pred = TRUE)
+    control <- control_resamples(save_pred = TRUE, verbose = TRUE)
     
     # Training the models using workflow set
     # Set up workflow where the train recipe is applied to every model specified
-    # train_models <- 
-    #     workflow_set(
-    #         preproc = list(base = train_rec),
-    #         models = selected_model_specs,
-    #         cross = TRUE
-    #     )
+    train_models <-
+        workflow_set(
+            preproc = list(base = train_rec),
+            models = selected_model_specs,
+            cross = TRUE
+        )
     
-    # doParallel
-    # cores <- parallel::detectCores(logical = FALSE)
-    # cl <- makePSOCKcluster(cores)
-    # registerDoParallel(cores = cl)
-    # Train all the models by mapping the fit_resamples function to every 
-    # training workflow
-    # train_models <- train_models %>%
-    #    workflow_map("fit_resamples", resamples = train_folds,
-    #                 metrics = metrics,
-    #                 verbose = TRUE,
-    #                 control=control_resamples(save_pred = TRUE))
-    # stopCluster(cl)
-    
-    # Initialize number of models and list for storing results
-    num_models <- length(selected_model_specs)
-    results <- list()
-    
-    # Increase progress if running in Shiny
-    if(progress){
+    if(multi_core){
+      library(doFuture)
+      library(parallel)
       
-      # Increment the progress bar, and update the detail text.
-      setProgress(value=0,
-                  message = "Training classification models....",
-                  detail = paste(0, "out of", num_models))
-    }
-    
-    wtime <- system.time({
-    for(i in 1:num_models){
+      control <- control_resamples(save_pred = TRUE, verbose = TRUE,
+                                   allow_par=TRUE,
+                                   parallel_over = "resamples")
+      
+      #numCores <- as.numeric(Sys.getenv('LSB_DJOB_NUMPROC'))
+      numCores <- parallel::detectCores()
+      
+      registerDoFuture()
+      cl <- makeCluster(numCores)
+      cl
+      plan(cluster, workers=cl)
+      #Train all the models by mapping the fit_resamples function to every
+      #training workflow
       start.time <- Sys.time()
-      model <- names(selected_model_specs[i])
-      print(model)
-      train_result <- fit_resamples(selected_model_specs[[model]],
-                                    train_rec, 
-                                    train_folds, 
-                                    metrics = metrics,
-                                    control = control)
-      results[[model]] <- train_result
+      train_results <- train_models %>%
+        workflow_map("fit_resamples", resamples = train_folds,
+                     metrics = metrics,
+                     verbose = TRUE,
+                     control = control)
       end.time <- Sys.time()
       time.taken <- end.time - start.time
       print(time.taken)
+    }
+  
+    # # Initialize number of models and list for storing results
+    # num_models <- length(selected_model_specs)
+    # results <- list()
+    # 
+    # # Increase progress if running in Shiny
+    # if(progress){
+    #   
+    #   # Increment the progress bar, and update the detail text.
+    #   setProgress(value=0,
+    #               message = "Training classification models....",
+    #               detail = paste(0, "out of", num_models))
+    # }
+    # 
+    # numCores <- parallel::detectCores(logical = FALSE) - 1
+    # registerDoFuture()
+    # cl <- makeCluster(numCores)
+    # plan(future::cluster, workers = cl)
+    # 
+    # wtime <- system.time({
+    # for(i in 1:num_models){
+    # # result <- foreach(i = 1:num_models,
+    # #                   .combine="rbind",
+    # #                   .packages=c('dplyr', 'tidymodels')) %dopar% {
+    #   start.time <- Sys.time()
+    #   model <- names(selected_model_specs[i])
+    #   print(model)
+    #   model_wf <- workflow() %>% 
+    #     add_recipe(train_rec) %>% 
+    #     add_model(selected_model_specs[[model]])
+    #   
+    #   train_result <- fit_resamples(model_wf,
+    #                                 train_folds, 
+    #                                 metrics = metrics,
+    #                                 control = control)
+    #   train_result
+    #   results[[model]] <- train_result
+    #   end.time <- Sys.time()
+    #   time.taken <- end.time - start.time
+    #   print(time.taken)
+    #   
+    #   # Increment the progress bar, and update the detail text.
+    #   if(progress){
+    #     incProgress(amount=1/num_models,
+    #                 message = "Training classification models....",
+    #                 detail=paste(i, "out of", num_models))
+    #   }
+    # }
+    # })
+    # wtime
+    # #parallel::stopCluster(cl)
+    
+    if(!binary_classify){
+      #library(DT)
       
-      # Increment the progress bar, and update the detail text.
-      if(progress){
-        incProgress(amount=1/num_models,
-                    message = "Training classification models....",
-                    detail=paste(i, "out of", num_models))
-      }
-    }
-    })
-    wtime
-    
-    # Evaluation
-    # Create a tibble with model results, specs and respective names
-    models <- tibble(model = results,
-                     model_spec = selected_model_specs,
-                     model_name = model_names)
-    
-    # Create a helper function for collecting the metrics 
-    map_collect_metrics <- function(model){
-        model %>% 
-            dplyr::select(id, .metrics) %>% 
-            unnest(.metrics)
-    }
-    
-    # Apply helper function and extract the metrics 
-    model_metrics <- models %>% 
-        mutate(res = purrr::map(model, map_collect_metrics)) %>% 
-        dplyr::select(model_name, res) %>% 
-        unnest(res)
-    
-    # Create a helper function for collecting the predictions 
-    map_collect_predictions <- function(model){
-        model %>% 
-            dplyr::select(id, .predictions) %>% 
-            unnest(.predictions)
-    }
-    
-    # Apply helper function and extract the predictions 
-    model_predictions <- models %>% 
-        mutate(res = purrr::map(model, map_collect_predictions)) %>% 
-        dplyr::select(model_name, res) %>% 
-        unnest(res)
-    
-    # Selecting the best model
-    models_summary <- model_metrics %>% 
+      model_metrics <- train_results %>% 
+        collect_metrics()
+      
+      model_predictions <- train_results %>%
+        collect_predictions()
+      
+      models_summary <- model_metrics %>% 
+        #mutate(model_name = str_remove(wflow_id, pattern="base_")) %>% 
         group_by(model_name, .metric) %>% 
         dplyr::summarise(mean = mean(.estimate), .groups='drop') %>% 
         filter(.metric == eval_metric)
+      
+      df_stats_summary <- model_metrics %>% 
+        group_by(model_name, .metric) %>% 
+        dplyr::summarise(mean = mean(.estimate), .groups='drop') #%>%
+        #dplyr::select(model, .metric, .estimator, mean, std_err) %>% 
+        #mutate(across(c(mean, std_err), round, 3))
+        #DT::datatable() %>% 
+        #formatRound(columns=c('mean', 'std_err'), digits=4)
+      
+      saveRDS(model_metrics, "model_stats_summary.rds")
+
+      #cm <- results[["rf"]] %>%
+      cm <- model_predictions %>% 
+        conf_mat(class, .pred_class)
+      
+      cm_tibble <- cm$table %>% as_tibble()
+      heatmap_plot <- ggplot(data =  cm_tibble, mapping = aes(x = Truth, y = Prediction)) +
+        geom_tile(aes(fill = n), colour = "white") +
+        geom_text(aes(label = sprintf("%1.0f", n)), vjust = 1) +
+        scale_fill_gradient(low = "white", high = "red") +
+        theme_bw() + 
+        theme(legend.position = "none",
+              axis.text.x = element_text(angle = 45, hjust=1))
+      ggsave(filename="heatmap_plot.png", plot=heatmap_plot)
+      
+    } else {
+        
+      # Evaluation
+      # Create a tibble with model results, specs and respective names
+      models <- tibble(model = train_results$result,
+                       model_spec = selected_model_specs,
+                       model_name = model_names)
+      
+      # Create a helper function for collecting the metrics 
+      map_collect_metrics <- function(model){
+        model %>% 
+          dplyr::select(id, .metrics) %>% 
+          unnest(.metrics)
+      }
+      
+      # Apply helper function and extract the metrics 
+      model_metrics <- models %>% 
+        mutate(res = purrr::map(model, map_collect_metrics)) %>% 
+        dplyr::select(model_name, res) %>% 
+        unnest(res)
+      
+      # Create a helper function for collecting the predictions 
+      map_collect_predictions <- function(model){
+        model %>% 
+          dplyr::select(id, .predictions) %>% 
+          unnest(.predictions)
+      }
+      
+      # Apply helper function and extract the predictions 
+      model_predictions <- models %>% 
+        mutate(res = purrr::map(model, map_collect_predictions)) %>% 
+        dplyr::select(model_name, res) %>% 
+        unnest(res)
+      
+      # Selecting the best model
+      models_summary <- model_metrics %>% 
+        group_by(model_name, .metric) %>% 
+        dplyr::summarise(mean = mean(.estimate), .groups='drop') %>% 
+        filter(.metric == eval_metric)
+      }
+    #   
+    #   library(vip)
+    #   
+    #   rf_spec %>% 
+    #     set_engine("ranger", importance = "permutation") %>% 
+    #     fit(
+    #       class ~ .,
+    #       data = juice(train_prep) %>% 
+    #         select(-pmid) 
+    #     ) %>% 
+    #     vip(geom = "point")
+    # }
     
     # Determine which model preformed the best
     bestclassifier <- models_summary$model_name[which.max(models_summary$mean)]
@@ -736,7 +840,7 @@ classify_articles <- function(data_separated, metric="roc_auc", fold=5,
 }
 
 evaluate_models <- function(pred_train=NULL, test_data=NULL, fitted_models=NULL, 
-                            metrics, classes){
+                            metrics=NULL, classess=NULL){
    
    # Create dataframe for mapping between model abbreviations and names
    models_map <- data.frame(model_name=c('bag_mars', 'bag_tree', 'bart','xgboost', 
@@ -799,125 +903,127 @@ evaluate_models <- function(pred_train=NULL, test_data=NULL, fitted_models=NULL,
         labs(title='ROC curves across the 10-fold cross-validation for training data',
              subtitle='Mean AUC scores across the 10 cross-validation folds')
      
-     print(train_plot)
+     ggsave("ROC_CV_training_data.png")
+     #print(train_plot)
    }
    
-   # Evaluate all classifiers on test data
-   all_prediction_results <- data.frame()
-   for(model in models_map$model_name){
-      current_results <- classifier_predict(final_model_fit=fitted_models[[model]], 
-                                            test_data=testing_data)$pred
-      current_results$Model <- models_map[models_map$model_name == model, ]$Model
-      all_prediction_results <- rbind(all_prediction_results, current_results)
+   if(!is.null(fitted_models)){
+     # Evaluate all classifiers on test data
+     all_prediction_results <- data.frame()
+     for(model in models_map$model_name){
+        current_results <- classifier_predict(final_model_fit=fitted_models[[model]], 
+                                              test_data=testing_data)$pred
+        current_results$Model <- models_map[models_map$model_name == model, ]$Model
+        all_prediction_results <- rbind(all_prediction_results, current_results)
+     }
+     
+     # Add the true classes
+     all_test_results <- inner_join(all_prediction_results %>% 
+                                       dplyr::select(-one_of('class')), 
+                                    classes, by='pmid')
+     
+     # Calculate the test AUC scores for the all the models
+     all_metrics <- all_test_results %>% 
+        group_by(Model) %>% 
+        roc_auc(event_level='first', truth=class, .pred_Positive) %>% 
+        drop_na() %>% 
+        mutate(label.auc = sprintf("AUC = %.3f", .estimate))
+     
+     # Generate data for the ROC curves
+     df.roc.test <- all_test_results %>% 
+        drop_na() %>% 
+        dplyr::group_by(Model) %>% 
+        roc_curve(event_level='first', truth=class, .pred_Positive)
+     
+     df.roc.test.smooth <- all_test_results %>% 
+        drop_na() %>% 
+        dplyr::group_by(Model) %>% 
+        roc_curve(event_level='first', truth=class, .pred_Positive)
+     
+     # Plot ROC curves for all of the models using the test data
+     test_plot <- df.roc.test %>% 
+        ggplot(aes(x=1 - specificity, y=sensitivity)) +
+        geom_path(aes(colour=Model), alpha = 0.7) +
+        geom_abline(intercept = 0, slope = 1, lty = 3) +
+        facet_wrap(. ~Model) +
+        theme(legend.position="none") +
+        geom_text(data=all_metrics, x=0.75, y=0.25, size=3, 
+                  aes(label=label.auc), inherit.aes = F) + 
+        labs(title='ROC curves for the test data',
+             subtitle='AUC scores')
+     #print(test_plot)
+     
+  
+     # Find the lowest 1 - specificity at the 5% false negative level 
+     # (= 95% sensitivity)
+     df.best.spec <- df.roc.test %>% 
+        group_by(Model) %>% 
+        filter(round(sensitivity, 2) == 0.95) %>% 
+        dplyr::summarise(max_spec = max(specificity)) %>% 
+        mutate(spec.label = sprintf("Specificity = %.3f", max_spec))
+     
+     df.best.spec.smooth <- df.roc.test.smooth[!(df.roc.test.smooth$Model %in% 
+                                                    df.best.spec$Model), ] %>% 
+        group_by(Model) %>% 
+        filter(round(sensitivity, 2) == 0.95) %>% 
+        dplyr::summarise(max_spec = max(specificity)) %>% 
+        mutate(spec.label = sprintf("Specificity = %.3f", max_spec))
+     
+     df.best.spec <- rbind(df.best.spec, df.best.spec.smooth)
+        
+     df.lines <- data.frame(X = c(rep(df.best.spec$max_spec, 2)),
+                            Y = c(rep(0, length(df.best.spec$Model)), 
+                                  rep(0.95, length(df.best.spec$Model))))
+     df.lines$Model <- as.factor(rep(df.best.spec$Model, times = 2))
+     
+     # Generate plot of the ROC curves for each model on the test data
+     train_plot_sens_thres <- df.roc.test %>% 
+        ggplot(aes(x=1 - specificity, y=sensitivity)) +
+        geom_path(aes(colour=Model), alpha = 0.7) +
+        geom_abline(intercept = 0, slope = 1, lty = 3) +
+        facet_wrap(. ~Model) +
+        theme(legend.position="none") +
+        geom_text(data=all_metrics, x=0.75, y=0.25, size=3, 
+                  aes(label=label.auc), inherit.aes = F) + 
+        labs(title='ROC curves for the test data',
+             subtitle='AUC scores') + 
+        geom_point(data=df.lines, aes(x=1-X, y=Y, group = Model), colour="red") + 
+        geom_line(data=df.lines, aes(x=1-X, y=Y, group = Model), colour = "red", 
+                  alpha = 0.5) + 
+        geom_text(data=df.best.spec, x=0.65, y=0.15, size=3, 
+                  aes(label=spec.label), inherit.aes = F)
+     
+     #print(train_plot_sens_thres)
+     
+     # Generate table with AUC scores and best specificity at 95% sensitivity
+     df.summarized <- df.best.spec %>% 
+        dplyr::select(Model, spec.label) %>% 
+        inner_join(., all_metrics %>% dplyr::select(Model, label.auc), 
+                   by='Model') 
+     
+     DT::datatable(df.summarized,
+                   colnames = c('Model', "Specificity at 95% sensitivity", 
+                                'AUC score'),
+                   rownames = FALSE,
+                   options = list(
+                      columnDefs = list(list(className = 'dt-left', targets = 0:2))
+                   ))
+     
+     selected.models <- c("Random Forest", "Neural Network", 
+                          "Radial Basis Function SVM", "RuleFit", "Naive Bayes", 
+                          "K-Nearest Neighbors")
+     
+     # Generate plot of the ROC curves for each model on the test data
+     df.roc.test.compare <- df.roc.test %>% filter(Model %in% selected.models)
+     all_metrics.compare <- all_metrics %>% filter(Model %in% selected.models)
+     
+     train_plot_compare <- df.roc.test.compare %>% 
+        ggplot(aes(x=1 - specificity, y=sensitivity)) +
+        geom_path(aes(colour=Model), alpha = 0.7) +
+        geom_abline(intercept = 0, slope = 1, lty = 3) +
+        labs(title='Comparison of ROC curves for the 3 best classifiers and the 3 worst classifiers',
+             subtitle = "Classifier performance is assessed by AUC scores")
+     
+     #print(train_plot_compare)
    }
-   
-   # Add the true classes
-   all_test_results <- inner_join(all_prediction_results %>% 
-                                     dplyr::select(-one_of('class')), 
-                                  classes, by='pmid')
-   
-   # Calculate the test AUC scores for the all the models
-   all_metrics <- all_test_results %>% 
-      group_by(Model) %>% 
-      roc_auc(event_level='first', truth=class, .pred_Positive) %>% 
-      drop_na() %>% 
-      mutate(label.auc = sprintf("AUC = %.3f", .estimate))
-   
-   # Generate data for the ROC curves
-   df.roc.test <- all_test_results %>% 
-      drop_na() %>% 
-      dplyr::group_by(Model) %>% 
-      roc_curve(event_level='first', truth=class, .pred_Positive)
-   
-   df.roc.test.smooth <- all_test_results %>% 
-      drop_na() %>% 
-      dplyr::group_by(Model) %>% 
-      roc_curve(event_level='first', truth=class, .pred_Positive)
-   
-   # Plot ROC curves for all of the models using the test data
-   test_plot <- df.roc.test %>% 
-      ggplot(aes(x=1 - specificity, y=sensitivity)) +
-      geom_path(aes(colour=Model), alpha = 0.7) +
-      geom_abline(intercept = 0, slope = 1, lty = 3) +
-      facet_wrap(. ~Model) +
-      theme(legend.position="none") +
-      geom_text(data=all_metrics, x=0.75, y=0.25, size=3, 
-                aes(label=label.auc), inherit.aes = F) + 
-      labs(title='ROC curves for the test data',
-           subtitle='AUC scores')
-   print(test_plot)
-   
-
-   # Find the lowest 1 - specificity at the 5% false negative level 
-   # (= 95% sensitivity)
-   df.best.spec <- df.roc.test %>% 
-      group_by(Model) %>% 
-      filter(round(sensitivity, 2) == 0.95) %>% 
-      dplyr::summarise(max_spec = max(specificity)) %>% 
-      mutate(spec.label = sprintf("Specificity = %.3f", max_spec))
-   
-   df.best.spec.smooth <- df.roc.test.smooth[!(df.roc.test.smooth$Model %in% 
-                                                  df.best.spec$Model), ] %>% 
-      group_by(Model) %>% 
-      filter(round(sensitivity, 2) == 0.95) %>% 
-      dplyr::summarise(max_spec = max(specificity)) %>% 
-      mutate(spec.label = sprintf("Specificity = %.3f", max_spec))
-   
-   df.best.spec <- rbind(df.best.spec, df.best.spec.smooth)
-      
-   df.lines <- data.frame(X = c(rep(df.best.spec$max_spec, 2)),
-                          Y = c(rep(0, length(df.best.spec$Model)), 
-                                rep(0.95, length(df.best.spec$Model))))
-   df.lines$Model <- as.factor(rep(df.best.spec$Model, times = 2))
-   
-   # Generate plot of the ROC curves for each model on the test data
-   train_plot_sens_thres <- df.roc.test %>% 
-      ggplot(aes(x=1 - specificity, y=sensitivity)) +
-      geom_path(aes(colour=Model), alpha = 0.7) +
-      geom_abline(intercept = 0, slope = 1, lty = 3) +
-      facet_wrap(. ~Model) +
-      theme(legend.position="none") +
-      geom_text(data=all_metrics, x=0.75, y=0.25, size=3, 
-                aes(label=label.auc), inherit.aes = F) + 
-      labs(title='ROC curves for the test data',
-           subtitle='AUC scores') + 
-      geom_point(data=df.lines, aes(x=1-X, y=Y, group = Model), colour="red") + 
-      geom_line(data=df.lines, aes(x=1-X, y=Y, group = Model), colour = "red", 
-                alpha = 0.5) + 
-      geom_text(data=df.best.spec, x=0.65, y=0.15, size=3, 
-                aes(label=spec.label), inherit.aes = F)
-   
-   print(train_plot_sens_thres)
-   
-   # Generate table with AUC scores and best specificity at 95% sensitivity
-   df.summarized <- df.best.spec %>% 
-      dplyr::select(Model, spec.label) %>% 
-      inner_join(., all_metrics %>% dplyr::select(Model, label.auc), 
-                 by='Model') 
-   
-   DT::datatable(df.summarized,
-                 colnames = c('Model', "Specificity at 95% sensitivity", 
-                              'AUC score'),
-                 rownames = FALSE,
-                 options = list(
-                    columnDefs = list(list(className = 'dt-left', targets = 0:2))
-                 ))
-   
-   selected.models <- c("Random Forest", "Neural Network", 
-                        "Radial Basis Function SVM", "RuleFit", "Naive Bayes", 
-                        "K-Nearest Neighbors")
-   
-   # Generate plot of the ROC curves for each model on the test data
-   df.roc.test.compare <- df.roc.test %>% filter(Model %in% selected.models)
-   all_metrics.compare <- all_metrics %>% filter(Model %in% selected.models)
-   
-   train_plot_compare <- df.roc.test.compare %>% 
-      ggplot(aes(x=1 - specificity, y=sensitivity)) +
-      geom_path(aes(colour=Model), alpha = 0.7) +
-      geom_abline(intercept = 0, slope = 1, lty = 3) +
-      labs(title='Comparison of ROC curves for the 3 best classifiers and the 3 worst classifiers',
-           subtitle = "Classifier performance is assessed by AUC scores")
-   
-   print(train_plot_compare)
-   
 }
