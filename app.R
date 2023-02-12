@@ -12,6 +12,7 @@ library(httr)
 library(xml2)
 library(rules) # not on DTU Health Tech server
 library(baguette) # not on DTU Health Tech server
+library(rentrez)
 # library(tidymodels) # not on DTU Health Tech server
 # library(parallel)
 # library(doParallel)
@@ -29,6 +30,7 @@ library(baguette) # not on DTU Health Tech server
 # word_cloud libraries
 #library(wordcloud) # not on DTU Health Tech server
 #library(RColorBrewer)
+
 
 # Source custom functions
 source("classify_articles_functions.R")
