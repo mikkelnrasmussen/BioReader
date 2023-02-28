@@ -11,7 +11,6 @@ suppressMessages(library(tidymodels))
 suppressMessages(library(tidytext))
 suppressMessages(library(textrecipes))
 suppressMessages(library(discrim))
-suppressMessages(library(keras))
 
 pca_plot <- function(data){
    
@@ -79,3 +78,4 @@ pca_plot <- function(data){
                                      hjust = 0.5, 
                                      margin = margin(t = 20, r = 0, b = 20, l = 0)))
 }
+
