@@ -13,11 +13,11 @@ library(xml2)
 library(purrr)
 library(stringr)
 library(rentrez) # not on DTU server
-library(tidyr)
+library(tidyr) # not on DTU server
 library(textrecipes) # not on DTU server
 library(tidymodels) # not on DTU server
 library(discrim) # not on DTU server
-library(plsmod) # not on DTU Heath Tech server
+#library(plsmod) # not on DTU Heath Tech server
 library(plyr)
 
 # pca_plot libraries
