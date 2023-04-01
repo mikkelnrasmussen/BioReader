@@ -50,3 +50,6 @@ rsconnect/
 
 # Data folder
 data/
+
+# Mac stuff
+.DS_Store
