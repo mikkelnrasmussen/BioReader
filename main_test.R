@@ -60,60 +60,62 @@ if(download_articles){
   
 } else if (multiple_classes){
   library(readxl)
-  file_names <- dir("data/training_data/", full.names = TRUE)
+  
+  # Load the data
+  file_names <- dir("data/training_data", full.names = TRUE)
   df_all_classes <- do.call(rbind, lapply(file_names, read.csv))
   df_class_label <- read_excel("data/All_Updated_Categories_2019.xlsx")
   
-  df_main_classes <- df_all_classes %>% 
-    full_join(., df_class_label,
-              by=c("SubType" = "Abbreviation"))
-  
-  df_main_classes %>% 
-    filter(is.na(Class)) %>% 
+  # QC: Check if all the cateogries are present in both the metadata file
+  # and the data files
+  df_all_classes_only <- df_all_classes %>%
+    filter(!(SubType %in% df_class_label$Abbreviation)) %>% 
     select(SubType) %>% 
-    dplyr::count(SubType, sort=TRUE)
-  
-  # df_all_classes %>% 
-  #   dplyr::count(SubType, sort=TRUE) %>% 
-  #   View()
-  
-  df_main_classes %>% 
-    dplyr::count(Class, sort=TRUE)
-  
-  # df_main_classes %>% 
-  #   filter(is.na(SubType)) %>% 
-  #   View()
-  
-  df_main_classes <- df_main_classes %>% 
-    select(-c(SubType, Category, Subcategory)) %>% 
-    drop_na() %>% 
-    dplyr::rename(pmid = PubMed_ID) %>% 
+    pull() %>% 
+    unique()
+
+  df_class_label_only <- df_class_label %>%
+    filter(!(Abbreviation %in% df_all_classes$SubType)) %>% 
+    select(Abbreviation) %>% 
+    pull() %>% 
+    unique()
+
+  # Perform inner join to only keep the categories that are in common
+  df_merged <- df_all_classes %>%
+    inner_join(., df_class_label,
+              by=c("SubType" = "Abbreviation"))
+
+  # QC: Check which columns contain NAs 
+  df_merged %>%
+    is.na() %>%
+    colSums()
+
+  # Create dataframe with all the classes
+  df_main_classes <- df_merged %>%
+    select(PubMed_ID, Title, Abstract, Class) %>%
+    dplyr::rename(pmid = PubMed_ID) %>%
+    dplyr::rename_with(tolower)
+
+  # QC: Check if there are any NAs
+  df_main_classes %>%
+    is.na() %>%
+    colSums()
+
+  # Create dataframe with all categories
+  df_all_classes <- df_merged %>%
+    select(PubMed_ID, Title, Abstract, SubType) %>%
+    dplyr::rename(pmid = PubMed_ID) %>%
+    dplyr::rename(class = SubType) %>%
     dplyr::rename_with(tolower)
   
-  colSums(is.na(df_main_classes))
+  # QC: Check if there are any NAs
+  df_all_classes %>%
+    is.na() %>%
+    colSums()
   
-  df_main_classes %>% 
-    dplyr::count(class, sort=TRUE)
-  
-  df_all_classes <- df_all_classes %>% 
-    drop_na() %>% 
-    dplyr::rename(pmid = PubMed_ID) %>% 
-    dplyr::rename(class = SubType) %>% 
-    dplyr::rename_with(tolower) 
-  
-  # # Small classes
-  # small_classes <- df_all_classes %>% 
-  #   dplyr::count(class) %>% 
-  #   filter(n < 20)
-  # 
-  # df_all_classes <- df_all_classes %>% 
-  #   dplyr::filter(!(class %in% small_classes$class))
-  # 
-  # df_all_classes %>% 
-  #   dplyr::count(class, sort=TRUE)
-  
+  # Create training and test set
   set.seed(123)
-  split <- initial_split(df_main_classes, strata = class, prop = 0.80)
+  split <- initial_split(df_all_classes, strata = class, prop = 0.90)
   training_data <- training(split)
   testing_data <- testing(split)
   
@@ -179,12 +181,12 @@ if(!multiple_classes){
 if(train_model){
   # Training the classifiers and select the best classifier based on specified 
   # metric
-  training_results <- train_classifiers(train_data = training_data, 
-                                        eval_metric="roc_auc", 
+  training_results <- train_classifiers(train_data = training_data,
+                                        eval_metric = "roc_auc", 
                                         binary_classify = FALSE,
-                                        seed_num=123,
-                                        verbose=TRUE, 
-                                        fit_all=FALSE,
+                                        seed_num = 123,
+                                        verbose = TRUE, 
+                                        fit_all = FALSE,
                                         model_names = c("rf"))
   
   # Collect model(s), metrics and predictions
