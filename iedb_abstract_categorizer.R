@@ -15,6 +15,8 @@ library(baguette)
 library(rules)
 library(readxl)
 library(themis)
+library(doFuture)
+library(parallel)
 
 
 # Load the data
@@ -74,6 +76,8 @@ set.seed(123)
 split <- initial_split(df_all_classes, strata = class, prop = 0.90)
 training_data <- training(split)
 testing_data <- testing(split)
+dim(training_data)
+dim(testing_data)
 
 training_data <- training_data[, c('pmid', 'abstract', 'class')]
 train_rec <-
@@ -83,16 +87,16 @@ train_rec <-
   step_stopwords(abstract) %>%
   step_stem(abstract) %>%
   step_tokenfilter(abstract, max_tokens = 500) %>%
-  step_tfidf(abstract) #%>%
-  #step_upsample(class)
+  step_tfidf(abstract) %>%
+  step_downsample(class)
 
-train_prep <- prep(train_rec)
-train_prep
+#train_prep <- prep(train_rec)
+#train_prep
 
 # We will save a data frame from the PREP to use later with another algo
-train_baked <- bake(train_prep, new_data = NULL)
+#train_baked <- bake(train_prep, new_data = NULL)
 #write.csv(train_baked, "data/abstracts_baked.csv", row.names = FALSE)
-dim(train_baked)
+#dim(train_baked)
 
 ## Cross Validation Split of Training Data
 set.seed(888)
@@ -100,7 +104,10 @@ train_folds <- vfold_cv(data = training_data, v = 10)
 train_folds
 
 # Lasso
-lasso_spec <- logistic_reg(penalty = tune(), mixture = 1) %>%
+lasso_spec <- multinom_reg(
+  penalty = tune(), 
+  mixture = 1
+) %>%
   set_engine("glmnet")
 
 # Support Vector Machine - polynomial degree = 1
@@ -157,7 +164,16 @@ workflow_sets
 
 RUN = TRUE
 if (RUN) {
-    doParallel::registerDoParallel()
+    control <- control_resamples(save_pred = TRUE, verbose = TRUE,
+                                   allow_par=TRUE,
+                                   parallel_over = "resamples")
+      
+    numCores <- parallel::detectCores()
+    
+    registerDoFuture()
+    cl <- makeCluster(numCores)
+    cl
+    plan(cluster, workers=cl)
     start.time <- Sys.time()
     start.time
     fit_workflows <- workflow_sets %>%
@@ -166,13 +182,14 @@ if (RUN) {
             fn = "tune_grid",
             grid = 20,
             resamples = train_folds,
-            verbose = TRUE
+            verbose = TRUE,
+            control = control
             )
 
     end.time <- Sys.time()
     time.taken <- end.time - start.time
     time.taken
-    doParallel::stopImplicitCluster()
+    parallel::stopCluster(cl)
 }
 
 if (RUN) {
@@ -187,3 +204,5 @@ if (!RUN) {
 }
 
 autoplot(fit_workflows)
+ggsave("model_parformance_auc_and_accuracy.png")
+
