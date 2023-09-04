@@ -1,3 +1,4 @@
+library(tidyverse)
 retrive_articles <- function(pmidPositive, pmidNegative, pmidTBD, 
                              queryPositive="", queryNegative="", queryTBD="",
                              verbose=FALSE, shiny_input=FALSE, 
@@ -362,7 +363,7 @@ train_classifiers <- function(train_data, eval_metric, verbose=FALSE,
       step_stem(abstract) %>%
       step_tokenfilter(abstract, max_tokens = 500) %>%
       step_tfidf(abstract) %>% 
-      step_downsample(class)
+      step_upsample(class)
       
     # train_prep <- prep(train_rec)
     # juice(train_prep) %>%
