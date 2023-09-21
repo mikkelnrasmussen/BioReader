@@ -73,7 +73,7 @@ split <- initial_split(df_all_classes, strata = class, prop = 0.90)
 training_data <- training(split)
 testing_data <- testing(split)
 
-training_data <- training_data[, c('pmid', 'abstract', 'class')]
+training_data <- training_data[, c("pmid", "abstract", "class")]
 train_rec <-
   recipe(class ~ ., data = training_data) %>%
   update_role(pmid, new_role = "id") %>%
@@ -89,7 +89,7 @@ train_prep
 
 # We will save a data frame from the PREP to use later with another algo
 train_baked <- bake(train_prep, new_data = NULL)
-#write.csv(train_baked, "data/abstracts_baked.csv", row.names = FALSE)
+# write.csv(train_baked, "data/abstracts_baked.csv", row.names = FALSE)
 dim(train_baked)
 
 ## Cross Validation Split of Training Data
@@ -98,13 +98,17 @@ train_folds <- vfold_cv(data = training_data, v = 10)
 train_folds
 
 # Lasso
-lasso_spec <- logistic_reg(penalty = tune(), mixture = 1) %>%
-  set_engine("glmnet")
+lasso_spec <- multinom_reg(
+  penalty = tune(),
+  mixture = 1
+) %>%
+  set_mode("classification") %>%
+  set_engine("nnet")
 
 # Support Vector Machine - polynomial degree = 1
-svmlinear_spec <- svm_poly(degree=1, cost = tune()) %>%
-  set_engine("kernlab") %>%
-  set_mode("classification")
+svmlinear_spec <- svm_poly(degree = 1, cost = tune()) %>%
+  set_mode("classification") %>%
+  set_engine("kernlab")
 
 # Support Vector Machine - radial basis function
 svmrbf_spec <- svm_rbf(cost = tune(), rbf_sigma = tune()) %>%
@@ -113,10 +117,10 @@ svmrbf_spec <- svm_rbf(cost = tune(), rbf_sigma = tune()) %>%
 
 # Random Forest
 randomf_spec <- rand_forest(
-    mtry = tune(),
-    trees = tune(),
-    min_n = tune()
-    ) %>%
+  mtry = tune(),
+  trees = tune(),
+  min_n = tune()
+) %>%
   set_mode("classification") %>%
   set_engine("ranger")
 
@@ -126,62 +130,61 @@ xgboost_spec <- boost_tree(
   mtry = tune(),
   tree_depth = tune(),
   learn_rate = .01
-  ) %>%
-  set_mode("classification") %>% 
+) %>%
+  set_mode("classification") %>%
   set_engine("xgboost")
 
 # Neural network
-nnet_spec <- mlp(epochs = 30,
-                   hidden_units = tune(),
-                   dropout = tune()) %>%
+nnet_spec <- mlp(
+  epochs = 30,
+  hidden_units = tune(),
+  dropout = tune()
+) %>%
   set_mode("classification") %>%
   set_engine("keras", verbose = 2)
 
 
 # Set up workflow set
-workflow_sets <-workflow_set(
+workflow_sets <- workflow_set(
   preproc = list(train_rec),
   models = list(
-    lasso_spec,
-    svmrbf_spec,
+    # lasso_spec,
+    # svmrbf_spec,
     xgboost_spec,
     randomf_spec,
     nnet_spec
-    ),
+  ),
   cross = TRUE
-  )
+)
 workflow_sets
 
 
-RUN = TRUE
+RUN <- TRUE
 if (RUN) {
-    doParallel::registerDoParallel()
-    start.time <- Sys.time()
-    start.time
-    fit_workflows <- workflow_sets %>%
-        workflow_map(
-            seed = 888,  
-            fn = "tune_grid",
-            grid = 20,
-            resamples = train_folds,
-            verbose = TRUE
-            )
-
-    end.time <- Sys.time()
-    time.taken <- end.time - start.time
-    time.taken
-    doParallel::stopImplicitCluster()
+  doParallel::registerDoParallel()
+  start_time <- Sys.time()
+  start_time
+  fit_workflows <- workflow_sets %>%
+    workflow_map(
+      seed = 888,
+      fn = "tune_grid",
+      grid = 20,
+      resamples = train_folds,
+      verbose = TRUE
+    )
+  end_time <- Sys.time()
+  time_taken <- end_time - start_time
+  time_taken
+  doParallel::stopImplicitCluster()
 }
-
+fit_workflows
 if (RUN) {
-    saved_abstract_modelset <- fit_workflows
-    saveRDS(saved_abstract_modelset, "saved_abstract_modelset_all_data.rds")
-    }
+  saved_abstract_modelset <- fit_workflows
+  saveRDS(saved_abstract_modelset, "saved_abstract_modelset_all_data.rds")
+}
 
 if (!RUN) {
-    # fit_workflows <- readRDS("saved_imdb_modelset_50K.rds")
-    fit_workflows <- readRDS("saved_imdb_modelset.rds")
-    #fit_workflows <- readRDS("saved_imdb_modelset_SVM_50K.rds")
+  fit_workflows <- readRDS("saved_imdb_modelset.rds")
 }
 
-autoplot(fit_workflows)
+# autoplot(fit_workflows)
