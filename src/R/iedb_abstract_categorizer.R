@@ -1,11 +1,8 @@
 ## Call libraries
+library(tidyverse)
 library(httr)
-library(dplyr)
 library(xml2)
-library(purrr)
-library(stringr)
 library(rentrez) # not on DTU server
-library(tidyr)
 library(textrecipes) # not on DTU server
 library(tidymodels) # not on DTU server
 library(discrim) # not on DTU server
@@ -16,7 +13,6 @@ library(rules)
 library(readxl)
 library(themis)
 
-
 # Load the data
 file_names <- dir("data/training_data", full.names = TRUE)
 df_all_classes <- do.call(rbind, lapply(file_names, read.csv))
@@ -25,23 +21,25 @@ df_class_label <- read_excel("data/All_Updated_Categories_2019.xlsx")
 # QC: Check if all the cateogries are present in both the metadata file
 # and the data files
 df_all_classes_only <- df_all_classes %>%
-  filter(!(SubType %in% df_class_label$Abbreviation)) %>% 
-  select(SubType) %>% 
-  pull() %>% 
+  filter(!(SubType %in% df_class_label$Abbreviation)) %>%
+  select(SubType) %>%
+  pull() %>%
   unique()
 
 df_class_label_only <- df_class_label %>%
-  filter(!(Abbreviation %in% df_all_classes$SubType)) %>% 
-  select(Abbreviation) %>% 
-  pull() %>% 
+  filter(!(Abbreviation %in% df_all_classes$SubType)) %>%
+  select(Abbreviation) %>%
+  pull() %>%
   unique()
 
 # Perform inner join to only keep the categories that are in common
 df_merged <- df_all_classes %>%
-  inner_join(., df_class_label,
-            by=c("SubType" = "Abbreviation"))
+  inner_join(
+    df_class_label,
+    by = c("SubType" = "Abbreviation")
+  )
 
-# QC: Check which columns contain NAs 
+# QC: Check which columns contain NAs
 df_merged %>%
   is.na() %>%
   colSums()
@@ -77,14 +75,14 @@ testing_data <- testing(split)
 
 training_data <- training_data[, c('pmid', 'abstract', 'class')]
 train_rec <-
-  recipe(class ~ ., data = training_data) %>% 
-  update_role(pmid, new_role = "id") %>% 
-  step_tokenize(abstract) %>% 
+  recipe(class ~ ., data = training_data) %>%
+  update_role(pmid, new_role = "id") %>%
+  step_tokenize(abstract) %>%
   step_stopwords(abstract) %>%
   step_stem(abstract) %>%
   step_tokenfilter(abstract, max_tokens = 500) %>%
-  step_tfidf(abstract) #%>%
-  #step_upsample(class)
+  step_tfidf(abstract) %>%
+  step_downsample(class)
 
 train_prep <- prep(train_rec)
 train_prep
