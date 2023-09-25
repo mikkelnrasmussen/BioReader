@@ -20,51 +20,52 @@ df_class_label <- read_excel("data/All_Updated_Categories_2019.xlsx")
 
 # QC: Check if all the cateogries are present in both the metadata file
 # and the data files
-df_all_classes_only <- df_all_classes %>%
-  filter(!(SubType %in% df_class_label$Abbreviation)) %>%
-  select(SubType) %>%
-  pull() %>%
+df_all_classes_only <- df_all_classes |>
+  filter(!(SubType %in% df_class_label$Abbreviation)) |>
+  select(SubType) |>
+  pull() |>
   unique()
 
-df_class_label_only <- df_class_label %>%
-  filter(!(Abbreviation %in% df_all_classes$SubType)) %>%
-  select(Abbreviation) %>%
-  pull() %>%
+df_class_label_only <- df_class_label |>
+  filter(!(Abbreviation %in% df_all_classes$SubType)) |>
+  select(Abbreviation) |>
+  pull() |>
   unique()
 
 # Perform inner join to only keep the categories that are in common
-df_merged <- df_all_classes %>%
+df_merged <- df_all_classes |>
   inner_join(
     df_class_label,
     by = c("SubType" = "Abbreviation")
   )
 
 # QC: Check which columns contain NAs
-df_merged %>%
-  is.na() %>%
+df_merged |>
+  is.na() |>
   colSums()
 
 # Create dataframe with all the classes
-df_main_classes <- df_merged %>%
-  select(PubMed_ID, Title, Abstract, Class) %>%
-  dplyr::rename(pmid = PubMed_ID) %>%
+df_main_classes <- df_merged |>
+  select(PubMed_ID, Title, Abstract, Class) |>
+  dplyr::rename(pmid = PubMed_ID) |>
   dplyr::rename_with(tolower)
 
 # QC: Check if there are any NAs
-df_main_classes %>%
-  is.na() %>%
+df_main_classes |>
+  is.na() |>
   colSums()
 
 # Create dataframe with all categories
-df_all_classes <- df_merged %>%
-  select(PubMed_ID, Title, Abstract, SubType) %>%
-  dplyr::rename(pmid = PubMed_ID) %>%
-  dplyr::rename(class = SubType) %>%
-  dplyr::rename_with(tolower)
+df_all_classes <- df_merged |>
+  select(PubMed_ID, Title, Abstract, SubType) |>
+  dplyr::rename(pmid = PubMed_ID) |>
+  dplyr::rename(class = SubType) |>
+  dplyr::rename_with(tolower) |>
+  as_tibble()
 
 # QC: Check if there are any NAs
-df_all_classes %>%
-  is.na() %>%
+df_all_classes |>
+  is.na() |>
   colSums()
 
 # Create training and test set
@@ -75,13 +76,13 @@ testing_data <- testing(split)
 
 training_data <- training_data[, c("pmid", "abstract", "class")]
 train_rec <-
-  recipe(class ~ ., data = training_data) %>%
-  update_role(pmid, new_role = "id") %>%
-  step_tokenize(abstract) %>%
-  step_stopwords(abstract) %>%
-  step_stem(abstract) %>%
-  step_tokenfilter(abstract, max_tokens = 500) %>%
-  step_tfidf(abstract) %>%
+  recipe(class ~ ., data = training_data) |>
+  update_role(pmid, new_role = "id") |>
+  step_tokenize(abstract) |>
+  step_stopwords(abstract) |>
+  step_stem(abstract) |>
+  step_tokenfilter(abstract, max_tokens = 500) |>
+  step_tfidf(abstract) |>
   step_downsample(class)
 
 train_prep <- prep(train_rec)
@@ -101,46 +102,52 @@ train_folds
 lasso_spec <- multinom_reg(
   penalty = tune(),
   mixture = 1
-) %>%
-  set_mode("classification") %>%
+) |>
+  set_mode("classification") |>
   set_engine("nnet")
 
 # Support Vector Machine - polynomial degree = 1
-svmlinear_spec <- svm_poly(degree = 1, cost = tune()) %>%
-  set_mode("classification") %>%
+svmlinear_spec <- svm_poly(
+  # degree = 1,
+  # cost = tune()
+) |>
+  set_mode("classification") |>
   set_engine("kernlab")
 
 # Support Vector Machine - radial basis function
-svmrbf_spec <- svm_rbf(cost = tune(), rbf_sigma = tune()) %>%
-  set_mode("classification") %>%
+svmrbf_spec <- svm_rbf(
+  # cost = tune(),
+  # rbf_sigma = tune()
+) |>
+  set_mode("classification") |>
   set_engine("kernlab")
 
 # Random Forest
 randomf_spec <- rand_forest(
-  mtry = tune(),
-  trees = tune(),
-  min_n = tune()
-) %>%
-  set_mode("classification") %>%
+  # mtry = tune(),
+  # trees = tune(),
+  # min_n = tune()
+) |>
+  set_mode("classification") |>
   set_engine("ranger")
 
 # XGBoost
 xgboost_spec <- boost_tree(
-  trees = tune(),
-  mtry = tune(),
-  tree_depth = tune(),
-  learn_rate = .01
-) %>%
-  set_mode("classification") %>%
+  # trees = tune(),
+  # mtry = tune(),
+  # tree_depth = tune(),
+  # learn_rate = .01
+) |>
+  set_mode("classification") |>
   set_engine("xgboost")
 
 # Neural network
 nnet_spec <- mlp(
-  epochs = 30,
-  hidden_units = tune(),
-  dropout = tune()
-) %>%
-  set_mode("classification") %>%
+  # epochs = 30,
+  # hidden_units = tune(),
+  # dropout = tune()
+) |>
+  set_mode("classification") |>
   set_engine("keras", verbose = 2)
 
 
@@ -149,7 +156,7 @@ workflow_sets <- workflow_set(
   preproc = list(train_rec),
   models = list(
     # lasso_spec,
-    # svmrbf_spec,
+    svmrbf_spec,
     xgboost_spec,
     randomf_spec,
     nnet_spec
@@ -164,10 +171,10 @@ if (RUN) {
   doParallel::registerDoParallel()
   start_time <- Sys.time()
   start_time
-  fit_workflows <- workflow_sets %>%
+  fit_workflows <- workflow_sets |>
     workflow_map(
       seed = 888,
-      fn = "tune_grid",
+      fn = "fit_resamples",
       grid = 20,
       resamples = train_folds,
       verbose = TRUE
