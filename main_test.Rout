@@ -1,0 +1,343 @@
+
+R version 4.2.1 (2022-06-23) -- "Funny-Looking Kid"
+Copyright (C) 2022 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> # setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+> 
+> ## Call libraries
+> library(httr)
+> library(dplyr)
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+> library(xml2)
+> library(purrr)
+> library(stringr)
+> library(rentrez) # not on DTU server
+> library(tidyr)
+> library(textrecipes) # not on DTU server
+Loading required package: recipes
+
+Attaching package: ‘recipes’
+
+The following object is masked from ‘package:stringr’:
+
+    fixed
+
+The following object is masked from ‘package:stats’:
+
+    step
+
+> library(tidymodels) # not on DTU server
+── Attaching packages ────────────────────────────────────── tidymodels 1.0.0 ──
+✔ broom        1.0.1     ✔ rsample      1.1.0
+✔ dials        1.1.0     ✔ tibble       3.1.8
+✔ ggplot2      3.4.0     ✔ tune         1.0.1
+✔ infer        1.0.3     ✔ workflows    1.1.0
+✔ modeldata    1.0.1     ✔ workflowsets 1.0.0
+✔ parsnip      1.0.3     ✔ yardstick    1.1.0
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ scales::discard() masks purrr::discard()
+✖ dplyr::filter()   masks stats::filter()
+✖ recipes::fixed()  masks stringr::fixed()
+✖ dplyr::lag()      masks stats::lag()
+✖ recipes::step()   masks stats::step()
+• Dig deeper into tidy modeling with R at https://www.tmwr.org
+> library(discrim) # not on DTU server
+
+Attaching package: ‘discrim’
+
+The following object is masked from ‘package:dials’:
+
+    smoothness
+
+> library(plsmod) # not on DTU Heath Tech server
+> library(plyr)
+------------------------------------------------------------------------------
+You have loaded plyr after dplyr - this is likely to cause problems.
+If you need functions from both plyr and dplyr, please load plyr first, then dplyr:
+library(plyr); library(dplyr)
+------------------------------------------------------------------------------
+
+Attaching package: ‘plyr’
+
+The following object is masked from ‘package:purrr’:
+
+    compact
+
+The following objects are masked from ‘package:dplyr’:
+
+    arrange, count, desc, failwith, id, mutate, rename, summarise,
+    summarize
+
+> library(baguette)
+> library(rules)
+
+Attaching package: ‘rules’
+
+The following object is masked from ‘package:dials’:
+
+    max_rules
+
+> 
+> source("classify_articles_functions.R")
+> 
+> # Whether to train, save or load models
+> train_model <- TRUE
+> save_model <- TRUE
+> load_model <- FALSE
+> multiple_classes <- TRUE
+> multi_core <- TRUE
+> 
+> # Whether to test the pubmed_articles function or not 
+> download_articles <- FALSE
+> 
+> if(download_articles){
++   # Load the datasets
++   all_pos <- read.table(file.path("data", "allergy_positive.txt"))
++   all_neg <- read.table(file.path("data", "allergy_negative.txt"))
++   
++   # Split the positive and negative cases to make a pseudo-TBD group
++   tbd_pmids <- all_pos[1:100,] %>% append(all_neg[1:100,])
++   pos_pmids <- all_pos[501:1000,]
++   neg_pmids <- all_neg[501:1000,]
++   
++   # Provide the PMIDs positive and negative for the information and the PMIDs for 
++   # the articles that needs to be determined. The input right now is strings with 
++   # the PMIDs, since we are working with input through a Shiny app.
++   pmid_data <- retrive_articles(pmidPositive = pos_pmids,
++                                 pmidNegative = neg_pmids,
++                                 pmidTBD = tbd_pmids,
++                                 verbose = TRUE,
++                                 progress=FALSE,
++                                 shiny_input = FALSE)
++   
++   sum(pmid_data$class == 0)
++   sum(pmid_data$class == 1)
++   sum(pmid_data$class == 2)
++   
++   test_class <- pmid_data[pmid_data$class == 2, ]
++   test_class$class <- ifelse(test_class$pmid %in% all_pos[1:100,],
++                              "Positive", "Negative")
++   test_class$class <- factor(test_class$class, levels = c("Positive", "Negative"))
++   true_classes <- test_class[, c('pmid', 'class')]
++   
++ } else if (multiple_classes){
++   library(readxl)
++   
++   # Load the data
++   file_names <- dir("data/training_data", full.names = TRUE)
++   df_all_classes <- do.call(rbind, lapply(file_names, read.csv))
++   df_class_label <- read_excel("data/All_Updated_Categories_2019.xlsx")
++   
++   # QC: Check if all the cateogries are present in both the metadata file
++   # and the data files
++   df_all_classes_only <- df_all_classes %>%
++     filter(!(SubType %in% df_class_label$Abbreviation)) %>% 
++     select(SubType) %>% 
++     pull() %>% 
++     unique()
++ 
++   df_class_label_only <- df_class_label %>%
++     filter(!(Abbreviation %in% df_all_classes$SubType)) %>% 
++     select(Abbreviation) %>% 
++     pull() %>% 
++     unique()
++ 
++   # Perform inner join to only keep the categories that are in common
++   df_merged <- df_all_classes %>%
++     inner_join(., df_class_label,
++               by=c("SubType" = "Abbreviation"))
++ 
++   # QC: Check which columns contain NAs 
++   df_merged %>%
++     is.na() %>%
++     colSums()
++ 
++   # Create dataframe with all the classes
++   df_main_classes <- df_merged %>%
++     select(PubMed_ID, Title, Abstract, Class) %>%
++     dplyr::rename(pmid = PubMed_ID) %>%
++     dplyr::rename_with(tolower)
++ 
++   # QC: Check if there are any NAs
++   df_main_classes %>%
++     is.na() %>%
++     colSums()
++ 
++   # Create dataframe with all categories
++   df_all_classes <- df_merged %>%
++     select(PubMed_ID, Title, Abstract, SubType) %>%
++     dplyr::rename(pmid = PubMed_ID) %>%
++     dplyr::rename(class = SubType) %>%
++     dplyr::rename_with(tolower)
++   
++   # QC: Check if there are any NAs
++   df_all_classes %>%
++     is.na() %>%
++     colSums()
++   
++   # Create training and test set
++   set.seed(123)
++   split <- initial_split(df_all_classes, strata = class, prop = 0.90)
++   training_data <- training(split)
++   testing_data <- testing(split)
++   
++ } else {
++   
++   # Load the already downloaded PMID abstracts
++   column_names <- c('pmid', 'year', 'title', 'abstract', 'class')
++   train_pos <- read.csv(file.path("data", "curatable_training_set.csv"),
++                         col.names = column_names) %>% filter(year < 2020)
++   train_neg <- read.csv(file.path("data", "uncuratable_training_set.csv"),
++                         col.names = column_names) %>% filter(year < 2020)
++   test_pos <- read.csv(file.path("data", "curatable_test_set.csv"),
++                        col.names = column_names)
++   test_neg <- read.csv(file.path("data", "uncuratable_test_set.csv"),
++                        col.names = column_names)
++   
++   # Create a dataframe with training and test data
++   set.seed(1353)
++   #training_data <- rbind(train_pos, train_neg[sample(1:dim(train_pos)[1]), ])
++   training_data <- rbind(train_pos[1:100, ], train_neg[1:100, ])
++   training_split <- initial_split(training_data, strata = class, prop = 0.8)
++   orig_train_data <- training(training_split)
++   orig_test_data <- testing(training_split)
++ 
++   orig_train_data$pmid <- as.character(orig_train_data$pmid)
++   orig_test_data$pmid <- as.character(orig_test_data$pmid)
++ 
++   # Check that classes are balanced in train and test data
++   sum(orig_train_data$class == 'yes')
++   sum(orig_train_data$class == 'no')
++   sum(orig_test_data$class == 'yes')
++   sum(orig_test_data$class == 'no')
++ 
++   # Change class label on test data
++   tbd_data <- orig_test_data %>%
++      mutate(class = 2)
++ 
++   # Change class label on train data and merge with test data
++   pmid_data <- orig_train_data %>%
++      mutate(class = ifelse(class == 'yes', 1, 0)) %>%
++      rbind(tbd_data)
++   
++   # Create dataframe with true class values
++   test_class <- orig_test_data %>%
++      mutate(class = ifelse(class == 'yes', 'Positive', 'Negative'))
++   #test_class <- test_class[test_class$pmid %in% testing_data$pmid, ]
++   test_class$class <- factor(test_class$class, levels = c("Positive", "Negative"))
++   true_classes <- test_class[, c('pmid', 'class')]
++   
++ }
+Warning message:
+Too little data to stratify.
+• Resampling will be unstratified. 
+> 
+> if(!multiple_classes){
++   # Splitting the PMIDs into training and testing data
++   data_separated <- split_data(data=pmid_data)
++   training_data <- tibble(data_separated$train_data)
++   testing_data <- tibble(data_separated$test_data)
++   
++   sum(training_data$class == 'Positive')
++   sum(training_data$class == 'Negative')
++   dim(testing_data)
++ }
+> 
+> if(train_model){
++   # Training the classifiers and select the best classifier based on specified 
++   # metric
++   training_results <- train_classifiers(train_data = training_data,
++                                         eval_metric = "roc_auc", 
++                                         binary_classify = FALSE,
++                                         seed_num = 123,
++                                         verbose = TRUE, 
++                                         fit_all = FALSE,
++                                         model_names = c("rf"))
++   
++   # Collect model(s), metrics and predictions
++   metrics <- training_results$model_metrics
++   pred_train <- training_results$model_predictions
++   final_model <- training_results$best_model
++   fitted_models <- training_results$fitted_models}
+Loading required package: foreach
+
+Attaching package: ‘foreach’
+
+The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+Loading required package: future
+i 1 of 1 resampling: base_rf
+i Fold1: preprocessor 1/1
+✓ Fold1: preprocessor 1/1
+i Fold1: preprocessor 1/1, model 1/1
+✓ Fold1: preprocessor 1/1, model 1/1
+i Fold1: preprocessor 1/1, model 1/1 (predictions)
+i Fold2: preprocessor 1/1
+✓ Fold2: preprocessor 1/1
+i Fold2: preprocessor 1/1, model 1/1
+✓ Fold2: preprocessor 1/1, model 1/1
+i Fold2: preprocessor 1/1, model 1/1 (predictions)
+i Fold3: preprocessor 1/1
+✓ Fold3: preprocessor 1/1
+i Fold3: preprocessor 1/1, model 1/1
+✓ Fold3: preprocessor 1/1, model 1/1
+i Fold3: preprocessor 1/1, model 1/1 (predictions)
+i Fold4: preprocessor 1/1
+✓ Fold4: preprocessor 1/1
+i Fold4: preprocessor 1/1, model 1/1
+✓ Fold4: preprocessor 1/1, model 1/1
+i Fold4: preprocessor 1/1, model 1/1 (predictions)
+! Fold4: internal:
+  While computing multiclass `precision()`, some levels had no predicted...
+  Precision is undefined in this case, and those levels will be removed ...
+  Note that the following number of true events actually occured for eac...
+  'VENOM': 14
+✓ Fold4: internal
+i Fold5: preprocessor 1/1
+✓ Fold5: preprocessor 1/1
+i Fold5: preprocessor 1/1, model 1/1
+✓ Fold5: preprocessor 1/1, model 1/1
+i Fold5: preprocessor 1/1, model 1/1 (predictions)
+✔ 1 of 1 resampling: base_rf (4m 38.4s)
+Time difference of 4.652832 mins
+Error in `group_by()`:
+! Must group by variables found in `.data`.
+✖ Column `model_name` is not found.
+Backtrace:
+    ▆
+ 1. ├─global train_classifiers(...)
+ 2. │ └─... %>% filter(.metric == eval_metric)
+ 3. ├─dplyr::filter(., .metric == eval_metric)
+ 4. ├─dplyr::summarise(., mean = mean(.estimate), .groups = "drop")
+ 5. ├─dplyr::group_by(., model_name, .metric)
+ 6. └─dplyr:::group_by.data.frame(., model_name, .metric)
+ 7.   └─dplyr::group_by_prepare(.data, ..., .add = .add, caller_env = caller_env())
+ 8.     └─rlang::abort(bullets, call = error_call)
+Execution halted
