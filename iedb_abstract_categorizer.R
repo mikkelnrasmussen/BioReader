@@ -154,28 +154,22 @@ workflow_sets <-workflow_set(
     lasso_spec,
     svmrbf_spec,
     xgboost_spec,
-    randomf_spec,
-    nnet_spec
+    randomf_spec
     ),
   cross = TRUE
   )
 workflow_sets
 
 
-RUN = TRUE
+RUN = FALSE
 if (RUN) {
     control <- control_resamples(save_pred = TRUE, verbose = TRUE,
                                    allow_par=TRUE,
                                    parallel_over = "resamples")
       
-    numCores <- parallel::detectCores()
+    library(doFuture)
+    library(parallel)
     
-    registerDoFuture()
-    cl <- makeCluster(numCores)
-    cl
-    plan(cluster, workers=cl)
-    start.time <- Sys.time()
-    start.time
     fit_workflows <- workflow_sets %>%
         workflow_map(
             seed = 888,  
@@ -185,11 +179,24 @@ if (RUN) {
             verbose = TRUE,
             control = control
             )
-
+    
+    numCores <- as.numeric(Sys.getenv('LSB_DJOB_NUMPROC'))
+    
+    registerDoFuture()
+    cl <- makeCluster(numCores)
+    cl
+    plan(cluster, workers=cl)
+    #Train all the models by mapping the fit_resamples function to every
+    #training workflow
+    start.time <- Sys.time()
+    train_results <- train_models %>%
+      workflow_map("fit_resamples", resamples = train_folds,
+                    metrics = metrics,
+                    verbose = TRUE,
+                    control = control)
     end.time <- Sys.time()
     time.taken <- end.time - start.time
-    time.taken
-    parallel::stopCluster(cl)
+    print(time.taken)
 }
 
 if (RUN) {
@@ -199,7 +206,7 @@ if (RUN) {
 
 if (!RUN) {
     # fit_workflows <- readRDS("saved_imdb_modelset_50K.rds")
-    fit_workflows <- readRDS("saved_imdb_modelset.rds")
+    fit_workflows <- readRDS("saved_abstract_modelset_all_data.rds")
     #fit_workflows <- readRDS("saved_imdb_modelset_SVM_50K.rds")
 }
 
