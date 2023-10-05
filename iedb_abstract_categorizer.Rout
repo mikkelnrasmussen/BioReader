@@ -1,0 +1,478 @@
+
+R version 4.2.1 (2022-06-23) -- "Funny-Looking Kid"
+Copyright (C) 2022 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> ## Call libraries
+> library(httr)
+> library(dplyr)
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+> library(xml2)
+> library(purrr)
+> library(stringr)
+> library(rentrez) # not on DTU server
+> library(tidyr)
+> library(textrecipes) # not on DTU server
+Loading required package: recipes
+
+Attaching package: ‘recipes’
+
+The following object is masked from ‘package:stringr’:
+
+    fixed
+
+The following object is masked from ‘package:stats’:
+
+    step
+
+> library(tidymodels) # not on DTU server
+── Attaching packages ────────────────────────────────────── tidymodels 1.0.0 ──
+✔ broom        1.0.1     ✔ rsample      1.1.0
+✔ dials        1.1.0     ✔ tibble       3.1.8
+✔ ggplot2      3.4.0     ✔ tune         1.0.1
+✔ infer        1.0.3     ✔ workflows    1.1.0
+✔ modeldata    1.0.1     ✔ workflowsets 1.0.0
+✔ parsnip      1.0.3     ✔ yardstick    1.1.0
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ scales::discard() masks purrr::discard()
+✖ dplyr::filter()   masks stats::filter()
+✖ recipes::fixed()  masks stringr::fixed()
+✖ dplyr::lag()      masks stats::lag()
+✖ recipes::step()   masks stats::step()
+• Search for functions across packages at https://www.tidymodels.org/find/
+> library(discrim) # not on DTU server
+
+Attaching package: ‘discrim’
+
+The following object is masked from ‘package:dials’:
+
+    smoothness
+
+> library(plsmod) # not on DTU Heath Tech server
+> library(plyr)
+------------------------------------------------------------------------------
+You have loaded plyr after dplyr - this is likely to cause problems.
+If you need functions from both plyr and dplyr, please load plyr first, then dplyr:
+library(plyr); library(dplyr)
+------------------------------------------------------------------------------
+
+Attaching package: ‘plyr’
+
+The following object is masked from ‘package:purrr’:
+
+    compact
+
+The following objects are masked from ‘package:dplyr’:
+
+    arrange, count, desc, failwith, id, mutate, rename, summarise,
+    summarize
+
+> library(baguette)
+> library(rules)
+
+Attaching package: ‘rules’
+
+The following object is masked from ‘package:dials’:
+
+    max_rules
+
+> library(readxl)
+> library(themis)
+> library(doFuture)
+Loading required package: foreach
+
+Attaching package: ‘foreach’
+
+The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+Loading required package: future
+> library(parallel)
+> 
+> 
+> # Load the data
+> file_names <- dir("data/training_data", full.names = TRUE)
+> df_all_classes <- do.call(rbind, lapply(file_names, read.csv))
+> df_class_label <- read_excel("data/All_Updated_Categories_2019.xlsx")
+> 
+> # QC: Check if all the cateogries are present in both the metadata file
+> # and the data files
+> df_all_classes_only <- df_all_classes %>%
++   filter(!(SubType %in% df_class_label$Abbreviation)) %>% 
++   select(SubType) %>% 
++   pull() %>% 
++   unique()
+> 
+> df_class_label_only <- df_class_label %>%
++   filter(!(Abbreviation %in% df_all_classes$SubType)) %>% 
++   select(Abbreviation) %>% 
++   pull() %>% 
++   unique()
+> 
+> # Perform inner join to only keep the categories that are in common
+> df_merged <- df_all_classes %>%
++   inner_join(., df_class_label,
++             by=c("SubType" = "Abbreviation"))
+> 
+> # QC: Check which columns contain NAs 
+> df_merged %>%
++   is.na() %>%
++   colSums()
+  PubMed_ID       Title    Abstract     SubType       Class    Category 
+          0           0           0           0           0       15778 
+Subcategory          OK       class    category subcategory 
+          0           0           0       25552       11514 
+> 
+> # Create dataframe with all the classes
+> df_main_classes <- df_merged %>%
++   select(PubMed_ID, Title, Abstract, Class) %>%
++   dplyr::rename(pmid = PubMed_ID) %>%
++   dplyr::rename_with(tolower)
+> 
+> # QC: Check if there are any NAs
+> df_main_classes %>%
++   is.na() %>%
++   colSums()
+    pmid    title abstract    class 
+       0        0        0        0 
+> 
+> # Create dataframe with all categories
+> df_all_classes <- df_merged %>%
++   select(PubMed_ID, Title, Abstract, SubType) %>%
++   dplyr::rename(pmid = PubMed_ID) %>%
++   dplyr::rename(class = SubType) %>%
++   dplyr::rename_with(tolower)
+> 
+> # QC: Check if there are any NAs
+> df_all_classes %>%
++   is.na() %>%
++   colSums()
+    pmid    title abstract    class 
+       0        0        0        0 
+> 
+> # Create training and test set
+> set.seed(123)
+> split <- initial_split(df_all_classes, strata = class, prop = 0.90)
+Warning message:
+Too little data to stratify.
+• Resampling will be unstratified. 
+> training_data <- training(split)
+> testing_data <- testing(split)
+> dim(training_data)
+[1] 60273     4
+> dim(testing_data)
+[1] 6697    4
+> 
+> training_data <- training_data[, c('pmid', 'abstract', 'class')]
+> train_rec <-
++   recipe(class ~ ., data = training_data) %>% 
++   update_role(pmid, new_role = "id") %>% 
++   step_tokenize(abstract) %>% 
++   step_stopwords(abstract) %>%
++   step_stem(abstract) %>%
++   step_tokenfilter(abstract, max_tokens = 500) %>%
++   step_tfidf(abstract) %>%
++   step_downsample(class)
+> 
+> #train_prep <- prep(train_rec)
+> #train_prep
+> 
+> # We will save a data frame from the PREP to use later with another algo
+> #train_baked <- bake(train_prep, new_data = NULL)
+> #write.csv(train_baked, "data/abstracts_baked.csv", row.names = FALSE)
+> #dim(train_baked)
+> 
+> ## Cross Validation Split of Training Data
+> set.seed(888)
+> train_folds <- vfold_cv(data = training_data, v = 10)
+> train_folds
+#  10-fold cross-validation 
+# A tibble: 10 × 2
+   splits               id    
+   <list>               <chr> 
+ 1 <split [54245/6028]> Fold01
+ 2 <split [54245/6028]> Fold02
+ 3 <split [54245/6028]> Fold03
+ 4 <split [54246/6027]> Fold04
+ 5 <split [54246/6027]> Fold05
+ 6 <split [54246/6027]> Fold06
+ 7 <split [54246/6027]> Fold07
+ 8 <split [54246/6027]> Fold08
+ 9 <split [54246/6027]> Fold09
+10 <split [54246/6027]> Fold10
+> 
+> # Lasso
+> lasso_spec <- multinom_reg(
++   penalty = tune(), 
++   mixture = 1
++ ) %>%
++   set_engine("glmnet")
+> 
+> # Support Vector Machine - polynomial degree = 1
+> svmlinear_spec <- svm_poly(degree=1, cost = tune()) %>%
++   set_engine("kernlab") %>%
++   set_mode("classification")
+> 
+> # Support Vector Machine - radial basis function
+> svmrbf_spec <- svm_rbf(cost = tune(), rbf_sigma = tune()) %>%
++   set_mode("classification") %>%
++   set_engine("kernlab")
+> 
+> # Random Forest
+> randomf_spec <- rand_forest(
++     mtry = tune(),
++     trees = tune(),
++     min_n = tune()
++     ) %>%
++   set_mode("classification") %>%
++   set_engine("ranger")
+> 
+> # XGBoost
+> xgboost_spec <- boost_tree(
++   trees = tune(),
++   mtry = tune(),
++   tree_depth = tune(),
++   learn_rate = .01
++   ) %>%
++   set_mode("classification") %>% 
++   set_engine("xgboost")
+> 
+> # Neural network
+> nnet_spec <- mlp(epochs = 30,
++                    hidden_units = tune(),
++                    dropout = tune()) %>%
++   set_mode("classification") %>%
++   set_engine("keras", verbose = 2)
+> 
+> 
+> # Set up workflow set
+> workflow_sets <-workflow_set(
++   preproc = list(train_rec),
++   models = list(
++     lasso_spec,
++     svmrbf_spec,
++     xgboost_spec,
++     randomf_spec
++     ),
++   cross = TRUE
++   )
+> workflow_sets
+# A workflow set/tibble: 4 × 4
+  wflow_id            info             option    result    
+  <chr>               <list>           <list>    <list>    
+1 recipe_multinom_reg <tibble [1 × 4]> <opts[0]> <list [0]>
+2 recipe_svm_rbf      <tibble [1 × 4]> <opts[0]> <list [0]>
+3 recipe_boost_tree   <tibble [1 × 4]> <opts[0]> <list [0]>
+4 recipe_rand_forest  <tibble [1 × 4]> <opts[0]> <list [0]>
+> 
+> 
+> RUN = TRUE
+> if (RUN) {
++     control <- control_resamples(save_pred = TRUE, verbose = TRUE,
++                                    allow_par=TRUE,
++                                    parallel_over = "resamples")
++       
++     library(doFuture)
++     library(parallel)
++     
++     fit_workflows <- workflow_sets %>%
++         workflow_map(
++             seed = 888,  
++             fn = "tune_grid",
++             grid = 20,
++             resamples = train_folds,
++             verbose = TRUE,
++             control = control
++             )
++     
++     numCores <- as.numeric(Sys.getenv('LSB_DJOB_NUMPROC'))
++     
++     registerDoFuture()
++     cl <- makeCluster(numCores)
++     cl
++     plan(cluster, workers=cl)
++     #Train all the models by mapping the fit_resamples function to every
++     #training workflow
++     start.time <- Sys.time()
++     train_results <- train_models %>%
++       workflow_map("fit_resamples", resamples = train_folds,
++                     metrics = metrics,
++                     verbose = TRUE,
++                     control = control)
++     end.time <- Sys.time()
++     time.taken <- end.time - start.time
++     print(time.taken)
++ }
+i 1 of 4 tuning:     recipe_multinom_reg
+i Fold01: preprocessor 1/1
+✓ Fold01: preprocessor 1/1
+i Fold01: preprocessor 1/1, model 1/1
+! Fold01: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -2); Convergence for 2th lambda value n...
+✓ Fold01: preprocessor 1/1, model 1/1
+i Fold01: preprocessor 1/1, model 1/1 (predictions)
+x Fold01: preprocessor 1/1, model 1/1 (predictions):
+  Error in `.check_glmnet_penalty_predict()`:
+  ! The glmnet model was fit with a single penalty value of 9.9e+35. Pre...
+i Fold02: preprocessor 1/1
+✓ Fold02: preprocessor 1/1
+i Fold02: preprocessor 1/1, model 1/1
+! Fold02: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -2); Convergence for 2th lambda value n...
+✓ Fold02: preprocessor 1/1, model 1/1
+i Fold02: preprocessor 1/1, model 1/1 (predictions)
+x Fold02: preprocessor 1/1, model 1/1 (predictions):
+  Error in `.check_glmnet_penalty_predict()`:
+  ! The glmnet model was fit with a single penalty value of 9.9e+35. Pre...
+i Fold03: preprocessor 1/1
+✓ Fold03: preprocessor 1/1
+i Fold03: preprocessor 1/1, model 1/1
+! Fold03: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -2); Convergence for 2th lambda value n...
+✓ Fold03: preprocessor 1/1, model 1/1
+i Fold03: preprocessor 1/1, model 1/1 (predictions)
+x Fold03: preprocessor 1/1, model 1/1 (predictions):
+  Error in `.check_glmnet_penalty_predict()`:
+  ! The glmnet model was fit with a single penalty value of 9.9e+35. Pre...
+i Fold04: preprocessor 1/1
+✓ Fold04: preprocessor 1/1
+i Fold04: preprocessor 1/1, model 1/1
+! Fold04: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -2); Convergence for 2th lambda value n...
+✓ Fold04: preprocessor 1/1, model 1/1
+i Fold04: preprocessor 1/1, model 1/1 (predictions)
+x Fold04: preprocessor 1/1, model 1/1 (predictions):
+  Error in `.check_glmnet_penalty_predict()`:
+  ! The glmnet model was fit with a single penalty value of 9.9e+35. Pre...
+i Fold05: preprocessor 1/1
+✓ Fold05: preprocessor 1/1
+i Fold05: preprocessor 1/1, model 1/1
+! Fold05: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -2); Convergence for 2th lambda value n...
+✓ Fold05: preprocessor 1/1, model 1/1
+i Fold05: preprocessor 1/1, model 1/1 (predictions)
+x Fold05: preprocessor 1/1, model 1/1 (predictions):
+  Error in `.check_glmnet_penalty_predict()`:
+  ! The glmnet model was fit with a single penalty value of 9.9e+35. Pre...
+i Fold06: preprocessor 1/1
+✓ Fold06: preprocessor 1/1
+i Fold06: preprocessor 1/1, model 1/1
+! Fold06: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -2); Convergence for 2th lambda value n...
+✓ Fold06: preprocessor 1/1, model 1/1
+i Fold06: preprocessor 1/1, model 1/1 (predictions)
+x Fold06: preprocessor 1/1, model 1/1 (predictions):
+  Error in `.check_glmnet_penalty_predict()`:
+  ! The glmnet model was fit with a single penalty value of 9.9e+35. Pre...
+i Fold07: preprocessor 1/1
+✓ Fold07: preprocessor 1/1
+i Fold07: preprocessor 1/1, model 1/1
+! Fold07: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -2); Convergence for 2th lambda value n...
+✓ Fold07: preprocessor 1/1, model 1/1
+i Fold07: preprocessor 1/1, model 1/1 (predictions)
+x Fold07: preprocessor 1/1, model 1/1 (predictions):
+  Error in `.check_glmnet_penalty_predict()`:
+  ! The glmnet model was fit with a single penalty value of 9.9e+35. Pre...
+i Fold08: preprocessor 1/1
+✓ Fold08: preprocessor 1/1
+i Fold08: preprocessor 1/1, model 1/1
+! Fold08: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -2); Convergence for 2th lambda value n...
+✓ Fold08: preprocessor 1/1, model 1/1
+i Fold08: preprocessor 1/1, model 1/1 (predictions)
+x Fold08: preprocessor 1/1, model 1/1 (predictions):
+  Error in `.check_glmnet_penalty_predict()`:
+  ! The glmnet model was fit with a single penalty value of 9.9e+35. Pre...
+i Fold09: preprocessor 1/1
+✓ Fold09: preprocessor 1/1
+i Fold09: preprocessor 1/1, model 1/1
+! Fold09: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -2); Convergence for 2th lambda value n...
+✓ Fold09: preprocessor 1/1, model 1/1
+i Fold09: preprocessor 1/1, model 1/1 (predictions)
+x Fold09: preprocessor 1/1, model 1/1 (predictions):
+  Error in `.check_glmnet_penalty_predict()`:
+  ! The glmnet model was fit with a single penalty value of 9.9e+35. Pre...
+i Fold10: preprocessor 1/1
+✓ Fold10: preprocessor 1/1
+i Fold10: preprocessor 1/1, model 1/1
+! Fold10: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -2); Convergence for 2th lambda value n...
+✓ Fold10: preprocessor 1/1, model 1/1
+i Fold10: preprocessor 1/1, model 1/1 (predictions)
+x Fold10: preprocessor 1/1, model 1/1 (predictions):
+  Error in `.check_glmnet_penalty_predict()`:
+  ! The glmnet model was fit with a single penalty value of 9.9e+35. Pre...
+✖ 1 of 4 tuning:     recipe_multinom_reg failed with 
+i 2 of 4 tuning:     recipe_svm_rbf
+i Fold01: preprocessor 1/1
+✓ Fold01: preprocessor 1/1
+i Fold01: preprocessor 1/1, model 1/20
+✓ Fold01: preprocessor 1/1, model 1/20
+i Fold01: preprocessor 1/1, model 1/20 (predictions)
+i Fold01: preprocessor 1/1, model 2/20
+✓ Fold01: preprocessor 1/1, model 2/20
+i Fold01: preprocessor 1/1, model 2/20 (predictions)
+i Fold01: preprocessor 1/1, model 3/20
+✓ Fold01: preprocessor 1/1, model 3/20
+i Fold01: preprocessor 1/1, model 3/20 (predictions)
+i Fold01: preprocessor 1/1, model 4/20
+✓ Fold01: preprocessor 1/1, model 4/20
+i Fold01: preprocessor 1/1, model 4/20 (predictions)
+i Fold01: preprocessor 1/1, model 5/20
+✓ Fold01: preprocessor 1/1, model 5/20
+i Fold01: preprocessor 1/1, model 5/20 (predictions)
+i Fold01: preprocessor 1/1, model 6/20
+✓ Fold01: preprocessor 1/1, model 6/20
+i Fold01: preprocessor 1/1, model 6/20 (predictions)
+i Fold01: preprocessor 1/1, model 7/20
+✓ Fold01: preprocessor 1/1, model 7/20
+i Fold01: preprocessor 1/1, model 7/20 (predictions)
+i Fold01: preprocessor 1/1, model 8/20
+✓ Fold01: preprocessor 1/1, model 8/20
+i Fold01: preprocessor 1/1, model 8/20 (predictions)
+i Fold01: preprocessor 1/1, model 9/20
+✓ Fold01: preprocessor 1/1, model 9/20
+i Fold01: preprocessor 1/1, model 9/20 (predictions)
+i Fold01: preprocessor 1/1, model 10/20
+✓ Fold01: preprocessor 1/1, model 10/20
+i Fold01: preprocessor 1/1, model 10/20 (predictions)
+i Fold01: preprocessor 1/1, model 11/20
+✓ Fold01: preprocessor 1/1, model 11/20
+i Fold01: preprocessor 1/1, model 11/20 (predictions)
+i Fold01: preprocessor 1/1, model 12/20
+✓ Fold01: preprocessor 1/1, model 12/20
+i Fold01: preprocessor 1/1, model 12/20 (predictions)
+i Fold01: preprocessor 1/1, model 13/20
+✓ Fold01: preprocessor 1/1, model 13/20
+i Fold01: preprocessor 1/1, model 13/20 (predictions)
+i Fold01: preprocessor 1/1, model 14/20
+✓ Fold01: preprocessor 1/1, model 14/20
+i Fold01: preprocessor 1/1, model 14/20 (predictions)
+i Fold01: preprocessor 1/1, model 15/20
+✓ Fold01: preprocessor 1/1, model 15/20
+i Fold01: preprocessor 1/1, model 15/20 (predictions)
+i Fold01: preprocessor 1/1, model 16/20
+✓ Fold01: preprocessor 1/1, model 16/20
+i Fold01: preprocessor 1/1, model 16/20 (predictions)
+Warning messages:
+1: package ‘glmnet’ was built under R version 4.2.2 
+2: All models failed. Run `show_notes(.Last.tune.result)` for more information. 
+3: Unknown or uninitialised column: `.notes`. 
+4: package ‘kernlab’ was built under R version 4.2.2 
