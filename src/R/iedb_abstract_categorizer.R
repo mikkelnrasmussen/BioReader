@@ -16,12 +16,12 @@ library(themis)
 # Load the data
 file_names <- dir("data/training_data", full.names = TRUE)
 df_all_classes <- do.call(rbind, lapply(file_names, read.csv))
-df_class_label <- read_excel("data/All_Updated_Categories_2019.xlsx")
+df_class_label <- read_excel("data/All_Updated_Categories_2019_edited_by_mikkel.xlsx")
 
 # QC: Check if all the cateogries are present in both the metadata file
 # and the data files
 df_all_classes_only <- df_all_classes |>
-  filter(!(SubType %in% df_class_label$Abbreviation)) |>
+  filter(!(SubType %in% df_class_label$subcategory)) |>
   select(SubType) |>
   pull() |>
   unique()
