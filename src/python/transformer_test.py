@@ -237,10 +237,9 @@ plt.title('Confusion Matrix')
 plt.savefig(here("results/biobert_fine_tune_1000_class_confusion_matrix.png"))
 
 # Save classification report results
-metrics_dict = classification_report(all_true_labels, all_predictions, target_names=label_encoder.classes_)
-metrics_df = pd.DataFrame.from_dict(metrics_dict)
-print(metrics_dict)
-metrics_df.to_csv(here("results/biobert_classification_report_1000.csv"))
+metrics = classification_report(all_true_labels, all_predictions, target_names=label_encoder.classes_)
+with open(here("results/biobert_classification_report_1000.csv"), "w") as text_file:
+    text_file.write(metrics)
 
 roc_aucs = []
 pr_aucs = []
@@ -310,6 +309,8 @@ true_classes = np.array(all_true_labels)
 # Number of classes
 num_classes = len(label_encoder.classes_)
 
+all_scores_np = np.array(all_scores)
+
 # Plot histograms for confidence scores of each class separately
 fig, axes = plt.subplots(num_classes, 1, figsize=(10, 5 * num_classes))
 
@@ -326,10 +327,10 @@ for i in range(num_classes):
     axes[i].set_ylabel('Number of Samples')
     axes[i].legend()
     axes[i].grid(True)
-    
-    plt.tight_layout()
-    filename = f"results/biobert_fine_tune_1000_class_{i}_histogram.png"
-    plt.savefig(here(filename))
+
+plt.tight_layout()
+plt.show()
+
 
 
 
