@@ -1,36 +1,32 @@
 ## Call libraries
-library(tidyverse)
-library(httr)
-library(xml2)
-library(rentrez) # not on DTU server
-library(textrecipes) # not on DTU server
-library(tidymodels) # not on DTU server
-library(discrim) # not on DTU server
-library(plsmod) # not on DTU Heath Tech server
-library(plyr)
-library(baguette)
-library(rules)
-library(readxl)
-library(themis)
-library(optparse)
-library(parallel)
-library(doFuture)
+library("optparse")
+library("tidyverse")
+library("textrecipes") # not on DTU server
+library("tidymodels") # not on DTU server
+library("discrim") # not on DTU server
+library("plyr")
+library("baguette")
+library("rules")
+library("readxl")
+library("themis")
+library("parallel")
+library("doFuture")
 
 option_list <- list(
   make_option(
-    c("-t", "--target"),
+    c("-a", "--target"),
     type = "character",
     default = "class",
     help = "The target variable to train a model for [default: %default]"
   ),
   make_option(
-    c("--test"),
+    c("-t", "--test"),
     action = "store_true",
     default = FALSE,
     help = "Whether to subsample the data for testing [default: %default]"
   ),
   make_option(
-    c("--hpc"),
+    c("-c", "--hpc"),
     action = "store_true",
     default = FALSE,
     help = "If running on a HPC system like gbar [default: %default]"
