@@ -33,4 +33,4 @@ module load R/4.2.1-mkl2022update1
 export R_BATCH_OPTIONS="--no-save"
 mkdir -p time/
 # -- commands you want to execute -- # 
-/usr/bin/time -v -o time/bioreader.time R CMD BATCH main_test.R
+/usr/bin/time -v -o time/bioreader.time R CMD BATCH minimal_test.R
