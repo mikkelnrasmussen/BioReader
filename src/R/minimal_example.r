@@ -28,6 +28,12 @@ option_list <- list(
     action = "store_true",
     default = FALSE,
     help = "Whether to subsample the data for testing [default: %default]"
+  ),
+  make_option(
+    c("--hpc"),
+    action = "store_true",
+    default = FALSE,
+    help = "If running on a HPC system like gbar [default: %default]"
   )
 )
 
@@ -37,6 +43,7 @@ opt <- parse_args(opt_parser)
 # Access named arguments
 cat(paste("Target:", opt$target), fill = TRUE)
 cat(paste("Test:", opt$test), fill = TRUE)
+cat(paste("HPC:", opt$hpc), fill = TRUE)
 
 ###################################################################
 ######################### Load Data ###############################
@@ -160,6 +167,9 @@ train_rec <- recipe(target ~ ., data = training_data) |>
   step_tfidf(abstract)
 
 
+train_prep <- prep(train_rec)
+train_baked <- bake(train_prep, new_data = NULL)
+
 # Random Forest
 rf_spec <- rand_forest(
   mtry = tune(),
@@ -182,29 +192,139 @@ grid_ctrl <-
     save_workflow = TRUE
   )
 
-train_folds <- vfold_cv(data = training_data, v = 5)
+# Create a grid of tuning parameters
+grid <- grid_regular(
+  mtry(range = c(1, floor(sqrt(ncol(train_baked) - 1)))),
+  min_n(range = c(1, 15)),
+  trees(range = c(1000, 2000)),
+  levels = 5 # This creates a 5x5 grid, with 5 levels for each parameter
+)
 
-num_cores <- as.numeric(Sys.getenv("LSB_DJOB_NUMPROC"))
-doParallel::registerDoParallel(cores = num_cores)
+train_folds <- vfold_cv(data = training_data, v = 5)
+if (opt$hpc) {
+  num_cores <- as.numeric(Sys.getenv("LSB_DJOB_NUMPROC"))
+  doParallel::registerDoParallel(cores = num_cores)
+  registerDoFuture()
+  cl <- makeCluster(numCores)
+  cl
+  plan(cluster, workers = cl)
+} else {
+  num_cores <- detectCores()
+  doParallel::registerDoParallel(cores = num_cores)
+}
+
+
 start_time <- Sys.time()
 start_time
 
-registerDoFuture()
-cl <- makeCluster(numCores)
-cl
-plan(cluster, workers = cl)
 # Tune the model paramters
-results <- tune_grid(
+tune_results <- tune_grid(
   workflow,
   resamples = train_folds,
-  grid = 25,
+  grid = grid,
   control = grid_ctrl,
   metrics = metric_set(accuracy, roc_auc)
 )
 end_time <- Sys.time()
 time_taken <- end_time - start_time
 time_taken
-parallel::stopCluster(cl)
 
-saved_abstract_modelset <- fit_workflows
-saveRDS(saved_abstract_modelset, "saved_abstract_modelset_minimal_example.rds")
+if (opt$hpc) {
+  parallel::stopCluster(cl)
+} else {
+  doParallel::stopImplicitCluster()
+}
+
+tune_results %>%
+  collect_metrics() %>%
+  filter(.metric == "accuracy") %>%
+  select(mean, min_n, trees, mtry) %>%
+  pivot_longer(min_n:mtry,
+    values_to = "value",
+    names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "accuracy")
+
+tune_results %>%
+  collect_predictions() |>
+  colnames()
+inner_join(final_param) %>%
+  group_by(id) %>%
+  conf_mat(truth = target, estimate = .pred_class) %>%
+  mutate(tidied = map(conf_mat, tidy)) %>%
+  unnest(tidied)
+
+saved_abstract_modelset <- tune_results
+saveRDS(saved_abstract_modelset, "results/saved_abstract_modelset_minimal_example.rds")
+
+# Select the best model based on accuracy
+best_model <- tune_results |>
+  select_best("accuracy")
+
+# Create the final workflow with the paramters found via CV
+final_wf <- workflow |>
+  finalize_workflow(best_model)
+
+# Fit the best model on the training data and evaluate on the test data
+final_fit <- final_wf %>%
+  last_fit(data_split)
+
+# Collect the predictions from the final model fit
+predictions <- final_fit %>%
+  collect_predictions()
+
+# Create confusion matrix
+conf_matrix <- predictions %>%
+  conf_mat(truth = target, estimate = .pred_class)
+
+# Creat a plot of the confusion matrix
+plot_conf <- conf_matrix |>
+  autoplot(type = "heatmap") +
+  scale_fill_gradient(
+    low = "white",
+    high = "lightblue",
+    name = "Count"
+  ) +
+  labs(title = "Confusio  n Matrix", x = "Predicted labels", y = "True labels") +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.major = element_line(colour = "grey85", linetype = "solid"),
+    panel.grid.minor = element_line(colour = "grey85", linetype = "dotted"),
+    panel.background = element_rect(fill = "white"),
+    legend.position = "right",
+    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.title = element_text(size = 12)
+  )
+
+# Save the plot
+ggsave(
+  filename = "results/rf_fine_tune_class_confusion_matrix.png",
+  plot = plot_conf
+)
+
+# Create a performance metrics matrix
+metrics_mat <- confusionMatrix(
+  predictions$.pred_class,
+  predictions$target
+)
+conf_table <- metrics_mat$table |>
+  as.table() |>
+  as.data.frame()
+
+metrics_by_class <- metrics_mat$byClass |>
+  as.table() |>
+  as.data.frame()
+
+overall_stats <- metrics_mat$overall |>
+  as.table() |>
+  as.data.frame()
+
+# Save results
+write_csv(conf_table, file = "results/rf_confusion_matrix_table.csv")
+write_csv(metrics_by_class, file = "results/rf_metric_by_class.csv")
+write_csv(overall_stats, file = "results/rf_overall_stats.csv")
