@@ -56,3 +56,6 @@ data/
 
 # Virtual envirotment
 .venv
+
+# Time folder
+time/
