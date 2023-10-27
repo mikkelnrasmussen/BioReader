@@ -11,6 +11,7 @@ library("readxl")
 library("themis")
 library("parallel")
 library("doFuture")
+library("caret")
 
 option_list <- list(
   make_option(
