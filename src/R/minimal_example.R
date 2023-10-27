@@ -245,14 +245,6 @@ tune_results %>%
   facet_wrap(~parameter, scales = "free_x") +
   labs(x = NULL, y = "accuracy")
 
-tune_results %>%
-  collect_predictions() |>
-  colnames()
-inner_join(final_param) %>%
-  group_by(id) %>%
-  conf_mat(truth = target, estimate = .pred_class) %>%
-  mutate(tidied = map(conf_mat, tidy)) %>%
-  unnest(tidied)
 
 saved_abstract_modelset <- tune_results
 saveRDS(saved_abstract_modelset, "results/saved_abstract_modelset_minimal_example.rds")
