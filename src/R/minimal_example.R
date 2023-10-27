@@ -31,6 +31,12 @@ option_list <- list(
     action = "store_true",
     default = FALSE,
     help = "If running on a HPC system like gbar [default: %default]"
+  ),
+  make_option(
+    c("-p", "--parallel"),
+    action = "store_true",
+    default = FALSE,
+    help = "Whether to run the script using parallel processing [default: %default]"
   )
 )
 
@@ -41,6 +47,7 @@ opt <- parse_args(opt_parser)
 cat(paste("Target:", opt$target), fill = TRUE)
 cat(paste("Test:", opt$test), fill = TRUE)
 cat(paste("HPC:", opt$hpc), fill = TRUE)
+cat(paste("Parallel:", opt$parallel), fill = TRUE)
 
 ###################################################################
 ######################### Load Data ###############################
@@ -198,18 +205,19 @@ grid <- grid_regular(
 )
 
 train_folds <- vfold_cv(data = training_data, v = 5)
-if (opt$hpc) {
-  num_cores <- as.numeric(Sys.getenv("LSB_DJOB_NUMPROC"))
-  cat("Number of cores:", num_cores, fill = TRUE)
-  doParallel::registerDoParallel(cores = num_cores)
-  registerDoFuture()
-  cl <- makeCluster(num_cores)
-  cl
-} else {
-  num_cores <- detectCores()
-  doParallel::registerDoParallel(cores = num_cores)
+if (parallel) {
+  if (opt$hpc) {
+    num_cores <- as.numeric(Sys.getenv("LSB_DJOB_NUMPROC"))
+    cat("Number of cores:", num_cores, fill = TRUE)
+    doParallel::registerDoParallel(cores = num_cores)
+    registerDoFuture()
+    cl <- makeCluster(num_cores)
+    cl
+  } else {
+    num_cores <- detectCores()
+    doParallel::registerDoParallel(cores = num_cores)
+  }
 }
-
 
 start_time <- Sys.time()
 start_time
@@ -226,10 +234,12 @@ end_time <- Sys.time()
 time_taken <- end_time - start_time
 time_taken
 
-if (opt$hpc) {
-  parallel::stopCluster(cl)
-} else {
-  doParallel::stopImplicitCluster()
+if (opt$parallel) {
+  if (opt$hpc) {
+    parallel::stopCluster(cl)
+  } else {
+    doParallel::stopImplicitCluster()
+  }
 }
 
 tune_results %>%
