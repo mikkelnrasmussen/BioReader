@@ -205,7 +205,6 @@ if (opt$hpc) {
   registerDoFuture()
   cl <- makeCluster(num_cores)
   cl
-  plan(cluster, workers = cl)
 } else {
   num_cores <- detectCores()
   doParallel::registerDoParallel(cores = num_cores)
