@@ -205,7 +205,7 @@ grid <- grid_regular(
 )
 
 train_folds <- vfold_cv(data = training_data, v = 5)
-if (parallel) {
+if (opt$parallel) {
   if (opt$hpc) {
     num_cores <- as.numeric(Sys.getenv("LSB_DJOB_NUMPROC"))
     cat("Number of cores:", num_cores, fill = TRUE)
