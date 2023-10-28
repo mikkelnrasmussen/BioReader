@@ -61,4 +61,4 @@ data/
 time/
 
 # Avoid commiting large R objects
-.rds
+*.rds
