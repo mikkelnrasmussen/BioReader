@@ -13,6 +13,7 @@ library(rules)
 library(readxl)
 library(themis)
 library(optparse)
+library(finetune)
 
 option_list <- list(
   make_option(
@@ -138,11 +139,15 @@ if (opt$test) {
     ungroup()
 }
 
+###################################################################
+######################## Modelling ################################
+###################################################################
+
 # Create training and test set
 set.seed(123)
-split <- initial_split(df_main, strata = target, prop = 0.90)
-training_data <- training(split)
-testing_data <- testing(split)
+data_split <- initial_split(df_main, strata = target, prop = 0.90)
+training_data <- training(data_split)
+testing_data <- testing(data_split)
 
 # Setup the preprocessing steps
 train_rec <- training_data |>
@@ -152,8 +157,7 @@ train_rec <- training_data |>
   step_stopwords(abstract) |>
   step_stem(abstract) |>
   step_tokenfilter(abstract, max_tokens = 500) |>
-  step_tfidf(abstract) |>
-  step_downsample(target)
+  step_tfidf(abstract)
 
 train_prep <- prep(train_rec)
 train_prep
@@ -235,18 +239,44 @@ workflow_sets <- workflow_set(
 )
 workflow_sets
 
+grid_ctrl <-
+  control_grid(
+    save_pred = TRUE,
+    parallel_over = "everything",
+    save_workflow = TRUE
+  )
+
+race_ctrl <-
+  control_race(
+    save_pred = TRUE,
+    parallel_over = "everything",
+    save_workflow = TRUE
+  )
+
 num_cores <- parallel::detectCores() - 1
 RUN <- TRUE
 if (RUN) {
   doParallel::registerDoParallel(cores = num_cores)
   start_time <- Sys.time()
   start_time
-  fit_workflows <- workflow_sets |>
+  # fit_workflows <- workflow_sets |>
+  #   workflow_map(
+  #     seed = 888,
+  #     fn = "tune_grid",
+  #     grid = 5,
+  #     resamples = train_folds,
+  #     verbose = TRUE,
+  #     control = grid_ctrl
+  #   )
+
+  race_results <-
+    workflow_sets %>%
     workflow_map(
-      seed = 888,
-      fn = "tune_grid",
-      grid = 5,
+      "tune_race_anova",
+      seed = 1503,
       resamples = train_folds,
+      grid = 25,
+      control = race_ctrl,
       verbose = TRUE
     )
   end_time <- Sys.time()
@@ -254,6 +284,8 @@ if (RUN) {
   time_taken
   doParallel::stopImplicitCluster()
 }
+race_results$result
+
 fit_workflows
 if (RUN) {
   saved_abstract_modelset <- fit_workflows
@@ -265,3 +297,37 @@ if (!RUN) {
 }
 
 # autoplot(fit_workflows)
+
+fit_workflows |>
+  rank_results() %>%
+  filter(.metric == "accuracy") %>%
+  select(model, .config, accuracy = mean, rank)
+
+best_results <-
+  fit_workflows %>%
+  extract_workflow_set_result("recipe_boost_tree") %>%
+  select_best(metric = "accuracy")
+best_results
+
+boosting_test_results <-
+  fit_workflows %>%
+  extract_workflow("recipe_boost_tree") %>%
+  finalize_workflow(best_results) %>%
+  last_fit(split = data_split)
+
+boosting_test_results
+collect_metrics(boosting_test_results)
+
+# Compute per-class accuracy
+per_class_accuracy <- test_result %>%
+  group_by(.pred_class, target) %>%
+  summarise(
+    n = n(),
+    accuracy = sum(.pred_class == target) / n()
+  )
+
+boosting_test_results %>%
+  collect_predictions(summarize = TRUE)
+
+
+accuracy(hpc_cv, obs, pred)
