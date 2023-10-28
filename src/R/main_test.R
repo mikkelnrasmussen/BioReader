@@ -38,9 +38,10 @@ if (download_articles) {
   pos_pmids <- all_pos[501:1000, ]
   neg_pmids <- all_neg[501:1000, ]
 
-  # Provide the PMIDs positive and negative for the information and the PMIDs for
-  # the articles that needs to be determined. The input right now is strings with
-  # the PMIDs, since we are working with input through a Shiny app.
+  # Provide the PMIDs positive and negative for the information and
+  # the PMIDs for the articles that needs to be determined. The input
+  # right now is strings with the PMIDs, since we are working with input
+  # through a Shiny app.
   pmid_data <- retrive_articles(
     pmidPositive = pos_pmids,
     pmidNegative = neg_pmids,
@@ -58,7 +59,10 @@ if (download_articles) {
   test_class$class <- ifelse(test_class$pmid %in% all_pos[1:100, ],
     "Positive", "Negative"
   )
-  test_class$class <- factor(test_class$class, levels = c("Positive", "Negative"))
+  test_class$class <- factor(
+    test_class$class,
+    levels = c("Positive", "Negative")
+  )
   true_classes <- test_class[, c("pmid", "class")]
 } else if (multiple_classes) {
   library(readxl)
