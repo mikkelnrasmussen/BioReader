@@ -178,7 +178,7 @@ rf_spec <- rand_forest(
   min_n = tune()
 ) %>%
   set_mode("classification") %>%
-  set_engine("ranger")
+  set_engine("randomForest")
 
 # Create a workflow
 workflow <- workflow() %>%
