@@ -162,17 +162,14 @@ training_data <- training(data_split)
 testing_data <- testing(data_split)
 
 # Setup the preprocessing steps
-train_rec <- recipe(target ~ ., data = training_data) |>
+train_rec <- recipe(target ~ pmid + abstract, data = training_data) |>
   update_role(pmid, new_role = "id") |>
   step_tokenize(abstract) |>
   step_stopwords(abstract) |>
   step_stem(abstract) |>
-  step_tokenfilter(abstract, max_tokens = 500) |>
-  step_tfidf(abstract)
-
-
-train_prep <- prep(train_rec)
-train_baked <- bake(train_prep, new_data = NULL)
+  step_tokenfilter(abstract, max_tokens = 3750) |>
+  step_tfidf(abstract) |>
+  step_smote(target)
 
 # Random Forest
 rf_spec <- rand_forest(
@@ -193,14 +190,16 @@ grid_ctrl <-
   control_grid(
     save_pred = TRUE,
     parallel_over = "everything",
-    save_workflow = TRUE
+    save_workflow = TRUE,
+    verbose = TRUE
   )
 
 # Create a grid of tuning parameters
 grid <- grid_regular(
-  mtry(range = c(1, floor(sqrt(ncol(train_baked) - 1)))),
+  mtry(range = c(1, 50)),
   min_n(range = c(1, 15)),
   trees(range = c(1000, 2000)),
+  # max_tokens(range = c(100, 5000)),
   levels = 5 # This creates a 5x5 grid, with 5 levels for each parameter
 )
 
@@ -257,7 +256,7 @@ tune_results %>%
 
 
 saved_abstract_modelset <- tune_results
-saveRDS(saved_abstract_modelset, "results/saved_abstract_modelset_minimal_example.rds")
+saveRDS(saved_abstract_modelset, "results/saved_abstract_modelset_minimal_example_with_smote.rds")
 
 # Select the best model based on accuracy
 best_model <- tune_results |>
@@ -302,7 +301,7 @@ plot_conf <- conf_matrix |>
 
 # Save the plot
 ggsave(
-  filename = "results/rf_fine_tune_class_confusion_matrix.png",
+  filename = "results/rf_fine_tune_class_confusion_matrix_with_smote.png",
   plot = plot_conf
 )
 
@@ -324,6 +323,6 @@ overall_stats <- metrics_mat$overall |>
   as.data.frame()
 
 # Save results
-write_csv(conf_table, file = "results/rf_confusion_matrix_table.csv")
-write_csv(metrics_by_class, file = "results/rf_metric_by_class.csv")
-write_csv(overall_stats, file = "results/rf_overall_stats.csv")
+write_csv(conf_table, file = "results/rf_confusion_matrix_table_with_smote.csv")
+write_csv(metrics_by_class, file = "results/rf_metric_by_class_with_smote.csv")
+write_csv(overall_stats, file = "results/rf_overall_stats_with_smote.csv")
