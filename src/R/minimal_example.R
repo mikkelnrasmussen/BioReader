@@ -54,8 +54,8 @@ cat(paste("Parallel:", opt$parallel), fill = TRUE)
 ###################################################################
 
 file_names <- dir("data/training_data", full.names = TRUE)
-df_all_classes <- file_names |>
-  map(\(x) read_csv(x, show_col_types = FALSE)) |>
+df_all_classes <- file_names %>%
+  map(\(x) read_csv(x, show_col_types = FALSE)) %>%
   bind_rows()
 df_class_label <- read_excel(
   "data/All_Updated_Categories_2019.xlsx"
@@ -63,14 +63,14 @@ df_class_label <- read_excel(
 
 # If the category label is missing, then add the class
 # label instead
-df_class_label <- df_class_label |>
+df_class_label <- df_class_label %>%
   mutate(
     category = if_else(is.na(category), class, category)
   )
 
 # If the subcategory label is missing add the one found in the
 # Subcatgory column
-df_class_label <- df_class_label |>
+df_class_label <- df_class_label %>%
   mutate(
     subcategory = if_else(
       is.na(subcategory),
@@ -85,69 +85,69 @@ df_class_label <- df_class_label |>
 
 # Check if all the cateogries are present in both the metadata file
 # and the data files
-df_all_classes_only <- df_all_classes |>
-  filter(!(SubType %in% df_class_label$subcategory)) |>
-  select(SubType) |>
-  pull() |>
+df_all_classes_only <- df_all_classes %>%
+  filter(!(SubType %in% df_class_label$subcategory)) %>%
+  select(SubType) %>%
+  pull() %>%
   unique()
 
-df_class_label_only <- df_class_label |>
-  filter(!(subcategory %in% df_all_classes$SubType)) |>
-  select(subcategory) |>
-  pull() |>
+df_class_label_only <- df_class_label %>%
+  filter(!(subcategory %in% df_all_classes$SubType)) %>%
+  select(subcategory) %>%
+  pull() %>%
   unique()
 
 # Perform inner join to only keep the categories that are in common
-df_merged <- df_all_classes |>
+df_merged <- df_all_classes %>%
   left_join(
     df_class_label,
     by = c("SubType" = "subcategory")
-  ) |>
+  ) %>%
   filter(!(SubType %in% df_all_classes_only))
 
 # QC: Check which columns contain NAs
-df_merged |>
-  is.na() |>
+df_merged %>%
+  is.na() %>%
   colSums()
 
 # Let's fist look at the rows with missing titles
-df_merged |>
+df_merged %>%
   filter(is.na(Title))
 
 # There are some abstracts that look weird and starts with
 # "[Data extracted from this article was imported from"
 # Let's remove those
 weird_abstract <- "\\[Data extracted from this article was imported from"
-df_merged <- df_merged |>
+df_merged <- df_merged %>%
   filter(!str_detect(Abstract, weird_abstract))
 
 # Let's check again which columns contain NAs
-df_merged |>
-  is.na() |>
+df_merged %>%
+  is.na() %>%
   colSums()
 
 # Create dataframe with all the classes, category or subcategory
-df_main <- df_merged |>
+df_main <- df_merged %>%
   select(PubMed_ID, Abstract, opt$target)
 colnames(df_main) <- c("pmid", "abstract", "target")
-df_main <- df_main |>
+df_main <- df_main %>%
   mutate(target = as.factor(target))
 
 # QC: Check if there are any NAs
-df_main |>
-  is.na() |>
+df_main %>%
+  is.na() %>%
   colSums()
 
 # Check the distribution of the different classes
-df_main |>
-  group_by(target) |>
+df_main %>%
+  group_by(target) %>%
   dplyr::summarise(n = n())
 
 # Sample a subset of the data for testing
 if (opt$test) {
-  df_main <- df_main |>
-    group_by(target) |>
-    sample_n(min(n(), 200)) |>
+  df_main <- df_main %>%
+    group_by(target) %>%
+    sample_n(min(n(), 200)) %>%
     ungroup()
 }
 
@@ -162,13 +162,13 @@ training_data <- training(data_split)
 testing_data <- testing(data_split)
 
 # Setup the preprocessing steps
-train_rec <- recipe(target ~ pmid + abstract, data = training_data) |>
-  update_role(pmid, new_role = "id") |>
-  step_tokenize(abstract) |>
-  step_stopwords(abstract) |>
-  step_stem(abstract) |>
-  step_tokenfilter(abstract, max_tokens = 3750) |>
-  step_tfidf(abstract) |>
+train_rec <- recipe(target ~ pmid + abstract, data = training_data) %>%
+  update_role(pmid, new_role = "id") %>%
+  step_tokenize(abstract) %>%
+  step_stopwords(abstract) %>%
+  step_stem(abstract) %>%
+  step_tokenfilter(abstract, max_tokens = 3750) %>%
+  step_tfidf(abstract) %>%
   step_smote(target)
 
 # Random Forest
@@ -176,8 +176,8 @@ rf_spec <- rand_forest(
   mtry = tune(),
   trees = tune(),
   min_n = tune()
-) |>
-  set_mode("classification") |>
+) %>%
+  set_mode("classification") %>%
   set_engine("ranger")
 
 # Create a workflow
@@ -261,11 +261,11 @@ saved_abstract_modelset <- tune_results
 saveRDS(saved_abstract_modelset, "results/saved_abstract_modelset_minimal_example_with_smote.rds")
 
 # Select the best model based on accuracy
-best_model <- tune_results |>
+best_model <- tune_results %>%
   select_best("accuracy")
 
 # Create the final workflow with the paramters found via CV
-final_wf <- workflow |>
+final_wf <- workflow %>%
   finalize_workflow(best_model)
 
 # Fit the best model on the training data and evaluate on the test data
@@ -281,7 +281,7 @@ conf_matrix <- predictions %>%
   conf_mat(truth = target, estimate = .pred_class)
 
 # Creat a plot of the confusion matrix
-plot_conf <- conf_matrix |>
+plot_conf <- conf_matrix %>%
   autoplot(type = "heatmap") +
   scale_fill_gradient(
     low = "white",
@@ -312,16 +312,16 @@ metrics_mat <- confusionMatrix(
   predictions$.pred_class,
   predictions$target
 )
-conf_table <- metrics_mat$table |>
-  as.table() |>
+conf_table <- metrics_mat$table %>%
+  as.table() %>%
   as.data.frame()
 
-metrics_by_class <- metrics_mat$byClass |>
-  as.table() |>
+metrics_by_class <- metrics_mat$byClass %>%
+  as.table() %>%
   as.data.frame()
 
-overall_stats <- metrics_mat$overall |>
-  as.table() |>
+overall_stats <- metrics_mat$overall %>%
+  as.table() %>%
   as.data.frame()
 
 # Save results
