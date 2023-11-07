@@ -208,10 +208,11 @@ if (opt$parallel) {
   if (opt$hpc) {
     num_cores <- as.numeric(Sys.getenv("LSB_DJOB_NUMPROC"))
     cat("Number of cores:", num_cores, fill = TRUE)
+    # doParallel::registerDoParallel(cores = num_cores)
+    # registerDoFuture()
+    # cl <- makeCluster(num_cores)
+    # cl
     doParallel::registerDoParallel(cores = num_cores)
-    registerDoFuture()
-    cl <- makeCluster(num_cores)
-    cl
   } else {
     num_cores <- detectCores()
     doParallel::registerDoParallel(cores = num_cores)
@@ -235,7 +236,8 @@ time_taken
 
 if (opt$parallel) {
   if (opt$hpc) {
-    parallel::stopCluster(cl)
+    # parallel::stopCluster(cl)
+    doParallel::stopImplicitCluster()
   } else {
     doParallel::stopImplicitCluster()
   }
