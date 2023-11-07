@@ -55,7 +55,7 @@ cat(paste("Parallel:", opt$parallel), fill = TRUE)
 
 file_names <- dir("data/training_data", full.names = TRUE)
 df_all_classes <- file_names %>%
-  map(\(x) read_csv(x, show_col_types = FALSE)) %>%
+  map(x, read_csv, show_col_types = FALSE)) %>%
   bind_rows()
 df_class_label <- read_excel(
   "data/All_Updated_Categories_2019.xlsx"
