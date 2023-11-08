@@ -1,0 +1,34 @@
+Var1,Var2,Freq
+Class: Eukaryota (Non-Plant),Sensitivity,0.8141025641025641
+Class: Other Allergen,Sensitivity,0.9590361445783132
+Class: Plant,Sensitivity,0.8969957081545065
+Class: Eukaryota (Non-Plant),Specificity,0.9737654320987654
+Class: Other Allergen,Specificity,0.8946015424164524
+Class: Plant,Specificity,0.978984238178634
+Class: Eukaryota (Non-Plant),Pos Pred Value,0.8819444444444444
+Class: Other Allergen,Pos Pred Value,0.9066059225512528
+Class: Plant,Pos Pred Value,0.9457013574660634
+Class: Eukaryota (Non-Plant),Neg Pred Value,0.956060606060606
+Class: Other Allergen,Neg Pred Value,0.9534246575342464
+Class: Plant,Neg Pred Value,0.9588336192109778
+Class: Eukaryota (Non-Plant),Precision,0.8819444444444444
+Class: Other Allergen,Precision,0.9066059225512528
+Class: Plant,Precision,0.9457013574660633
+Class: Eukaryota (Non-Plant),Recall,0.8141025641025641
+Class: Other Allergen,Recall,0.9590361445783132
+Class: Plant,Recall,0.8969957081545065
+Class: Eukaryota (Non-Plant),F1,0.8466666666666667
+Class: Other Allergen,F1,0.9320843091334894
+Class: Plant,F1,0.920704845814978
+Class: Eukaryota (Non-Plant),Prevalence,0.19402985074626866
+Class: Other Allergen,Prevalence,0.5161691542288557
+Class: Plant,Prevalence,0.2898009950248756
+Class: Eukaryota (Non-Plant),Detection Rate,0.15796019900497513
+Class: Other Allergen,Detection Rate,0.49502487562189057
+Class: Plant,Detection Rate,0.2599502487562189
+Class: Eukaryota (Non-Plant),Detection Prevalence,0.1791044776119403
+Class: Other Allergen,Detection Prevalence,0.5460199004975125
+Class: Plant,Detection Prevalence,0.27487562189054726
+Class: Eukaryota (Non-Plant),Balanced Accuracy,0.8939339981006648
+Class: Other Allergen,Balanced Accuracy,0.9268188434973827
+Class: Plant,Balanced Accuracy,0.9379899731665702
