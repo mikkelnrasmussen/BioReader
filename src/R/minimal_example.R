@@ -192,7 +192,8 @@ train_rec <- recipe(target ~ pmid + abstract, data = training_data) |>
   step_stopwords(abstract) |>
   step_stem(abstract) |>
   step_tokenfilter(abstract, max_tokens = tune()) |>
-  step_tfidf(abstract)
+  step_tfidf(abstract) |>
+  step_smote(target)
 
 # Random Forest
 rf_spec <- rand_forest(
