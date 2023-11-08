@@ -37,6 +37,18 @@ option_list <- list(
     action = "store_true",
     default = FALSE,
     help = "Whether to run the script using parallel processing [default: %default]"
+  ),
+  make_option(
+    c("-o", "--output_dir"),
+    type = "character",
+    default = "results/",
+    help = "The directory where the results will be saved [default: %default]"
+  ),
+  make_option(
+    c("-d", "--append"),
+    type = "character",
+    default = "",
+    help = "Any type of text you would like to append to result files [default: %default]"
   )
 )
 
@@ -48,14 +60,16 @@ cat(paste("Target:", opt$target), fill = TRUE)
 cat(paste("Test:", opt$test), fill = TRUE)
 cat(paste("HPC:", opt$hpc), fill = TRUE)
 cat(paste("Parallel:", opt$parallel), fill = TRUE)
+cat(paste("Output directory:", opt$output_dir), fill = TRUE)
+cat(paste("Appending:", opt$append), fill = TRUE)
 
 ###################################################################
 ######################### Load Data ###############################
 ###################################################################
 
 file_names <- dir("data/training_data", full.names = TRUE)
-df_all_classes <- file_names %>%
-  map(., read_csv, show_col_types = FALSE) %>%
+df_all_classes <- file_names |>
+  map(\(x) read_csv(x, show_col_types = FALSE)) |>
   bind_rows()
 df_class_label <- read_excel(
   "data/All_Updated_Categories_2019.xlsx"
@@ -63,14 +77,14 @@ df_class_label <- read_excel(
 
 # If the category label is missing, then add the class
 # label instead
-df_class_label <- df_class_label %>%
+df_class_label <- df_class_label |>
   mutate(
     category = if_else(is.na(category), class, category)
   )
 
 # If the subcategory label is missing add the one found in the
 # Subcatgory column
-df_class_label <- df_class_label %>%
+df_class_label <- df_class_label |>
   mutate(
     subcategory = if_else(
       is.na(subcategory),
@@ -85,69 +99,79 @@ df_class_label <- df_class_label %>%
 
 # Check if all the cateogries are present in both the metadata file
 # and the data files
-df_all_classes_only <- df_all_classes %>%
-  filter(!(SubType %in% df_class_label$subcategory)) %>%
-  select(SubType) %>%
-  pull() %>%
+df_all_classes_only <- df_all_classes |>
+  filter(!(SubType %in% df_class_label$subcategory)) |>
+  select(SubType) |>
+  pull() |>
   unique()
 
-df_class_label_only <- df_class_label %>%
-  filter(!(subcategory %in% df_all_classes$SubType)) %>%
-  select(subcategory) %>%
-  pull() %>%
+df_class_label_only <- df_class_label |>
+  filter(!(subcategory %in% df_all_classes$SubType)) |>
+  select(subcategory) |>
+  pull() |>
   unique()
 
 # Perform inner join to only keep the categories that are in common
-df_merged <- df_all_classes %>%
+df_merged <- df_all_classes |>
   left_join(
     df_class_label,
     by = c("SubType" = "subcategory")
-  ) %>%
+  ) |>
   filter(!(SubType %in% df_all_classes_only))
 
 # QC: Check which columns contain NAs
-df_merged %>%
-  is.na() %>%
+df_merged |>
+  is.na() |>
   colSums()
 
 # Let's fist look at the rows with missing titles
-df_merged %>%
+df_merged |>
   filter(is.na(Title))
 
 # There are some abstracts that look weird and starts with
 # "[Data extracted from this article was imported from"
 # Let's remove those
 weird_abstract <- "\\[Data extracted from this article was imported from"
-df_merged <- df_merged %>%
+df_merged <- df_merged |>
   filter(!str_detect(Abstract, weird_abstract))
 
 # Let's check again which columns contain NAs
-df_merged %>%
-  is.na() %>%
+df_merged |>
+  is.na() |>
   colSums()
 
-# Create dataframe with all the classes, category or subcategory
-df_main <- df_merged %>%
-  select(PubMed_ID, Abstract, opt$target)
+if (opt$target == "class") {
+  # Create dataframe with all the classes, category or subcategory
+  df_main <- df_merged |>
+    select(PubMed_ID, Abstract, opt$target)
+} else if (opt$target %in% unique(df_class_label$class)) {
+  df_main <- df_merged |>
+    filter(class == opt$target) |>
+    select(PubMed_ID, Abstract, Category)
+} else if (opt$target %in% unique(df_class_label$category)) {
+  df_main <- df_merged |>
+    filter(class == opt$target) |>
+    select(PubMed_ID, Abstract, Subcategory)
+}
 colnames(df_main) <- c("pmid", "abstract", "target")
-df_main <- df_main %>%
+df_main <- df_main |>
   mutate(target = as.factor(target))
 
 # QC: Check if there are any NAs
-df_main %>%
-  is.na() %>%
+df_main |>
+  is.na() |>
   colSums()
 
 # Check the distribution of the different classes
-df_main %>%
-  group_by(target) %>%
+df_main |>
+  group_by(target) |>
   dplyr::summarise(n = n())
 
 # Sample a subset of the data for testing
 if (opt$test) {
-  df_main <- df_main %>%
-    group_by(target) %>%
-    sample_n(min(n(), 200)) %>%
+  df_main <- df_main |>
+    group_by(target) |>
+    sample_n(min(n(), 200)) |>
     ungroup()
 }
 
@@ -162,23 +186,22 @@ training_data <- training(data_split)
 testing_data <- testing(data_split)
 
 # Setup the preprocessing steps
-train_rec <- recipe(target ~ pmid + abstract, data = training_data) %>%
-  update_role(pmid, new_role = "id") %>%
-  step_tokenize(abstract) %>%
-  step_stopwords(abstract) %>%
-  step_stem(abstract) %>%
-  step_tokenfilter(abstract, max_tokens = 3750) %>%
-  step_tfidf(abstract) %>%
-  step_smote(target)
+train_rec <- recipe(target ~ pmid + abstract, data = training_data) |>
+  update_role(pmid, new_role = "id") |>
+  step_tokenize(abstract) |>
+  step_stopwords(abstract) |>
+  step_stem(abstract) |>
+  step_tokenfilter(abstract, max_tokens = tune()) |>
+  step_tfidf(abstract)
 
 # Random Forest
 rf_spec <- rand_forest(
   mtry = tune(),
   trees = tune(),
   min_n = tune()
-) %>%
-  set_mode("classification") %>%
-  set_engine("randomForest")
+) |>
+  set_mode("classification") |>
+  set_engine("ranger")
 
 # Create a workflow
 workflow <- workflow() %>%
@@ -199,7 +222,7 @@ grid <- grid_regular(
   mtry(range = c(1, 50)),
   min_n(range = c(1, 15)),
   trees(range = c(1000, 2000)),
-  # max_tokens(range = c(100, 5000)),
+  max_tokens(range = c(100, 5000)),
   levels = 5 # This creates a 5x5 grid, with 5 levels for each parameter
 )
 
@@ -258,14 +281,21 @@ tune_results %>%
 
 
 saved_abstract_modelset <- tune_results
-saveRDS(saved_abstract_modelset, "results/saved_abstract_modelset_minimal_example_with_smote.rds")
+filename_model <- paste0(
+  opt$output_dir,
+  "saved_abstract_modelset_",
+  opt$target,
+  opt$append,
+  ".rds"
+)
+saveRDS(saved_abstract_modelset, filename_model)
 
 # Select the best model based on accuracy
-best_model <- tune_results %>%
+best_model <- tune_results |>
   select_best("accuracy")
 
 # Create the final workflow with the paramters found via CV
-final_wf <- workflow %>%
+final_wf <- workflow |>
   finalize_workflow(best_model)
 
 # Fit the best model on the training data and evaluate on the test data
@@ -281,7 +311,7 @@ conf_matrix <- predictions %>%
   conf_mat(truth = target, estimate = .pred_class)
 
 # Creat a plot of the confusion matrix
-plot_conf <- conf_matrix %>%
+plot_conf <- conf_matrix |>
   autoplot(type = "heatmap") +
   scale_fill_gradient(
     low = "white",
@@ -302,8 +332,15 @@ plot_conf <- conf_matrix %>%
   )
 
 # Save the plot
+filename_ctp <- paste0(
+  opt$output_dir,
+  "rf_fine_tune_class_confusion_matrix_",
+  opt$target,
+  opt$append,
+  ".png"
+)
 ggsave(
-  filename = "results/rf_fine_tune_class_confusion_matrix_with_smote.png",
+  filename = filename_ctp,
   plot = plot_conf
 )
 
@@ -312,19 +349,39 @@ metrics_mat <- confusionMatrix(
   predictions$.pred_class,
   predictions$target
 )
-conf_table <- metrics_mat$table %>%
-  as.table() %>%
+conf_table <- metrics_mat$table |>
+  as.table() |>
   as.data.frame()
 
-metrics_by_class <- metrics_mat$byClass %>%
-  as.table() %>%
+metrics_by_class <- metrics_mat$byClass |>
+  as.table() |>
   as.data.frame()
 
-overall_stats <- metrics_mat$overall %>%
-  as.table() %>%
+overall_stats <- metrics_mat$overall |>
+  as.table() |>
   as.data.frame()
 
 # Save results
-write_csv(conf_table, file = "results/rf_confusion_matrix_table_with_smote.csv")
-write_csv(metrics_by_class, file = "results/rf_metric_by_class_with_smote.csv")
-write_csv(overall_stats, file = "results/rf_overall_stats_with_smote.csv")
+filename_ct <- paste0(
+  opt$output_dir,
+  "rf_confusion_matrix_table_",
+  opt$target,
+  opt$append,
+  ".csv"
+)
+write_csv(conf_table, file = filename_ct)
+filename_mbc <- paste0(
+  opt$output_dir,
+  "rf_metric_by_target_",
+  opt$target,
+  opt$append,
+  ".csv"
+)
+write_csv(metrics_by_class, file = filename_mbc)
+filename_mbc <- paste0(
+  opt$output_dir,
+  "rf_overall_stats_",
+  opt$target,
+  opt$append,
+  ".csv"
+)
