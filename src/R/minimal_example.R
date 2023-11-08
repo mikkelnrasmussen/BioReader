@@ -231,8 +231,8 @@ train_folds <- vfold_cv(data = training_data, v = 5)
 if (opt$parallel) {
   if (opt$hpc) {
     # num_cores <- as.numeric(Sys.getenv("LSB_DJOB_NUMPROC"))
-    cat("Number of cores:", num_cores, fill = TRUE)
     num_cores <- 16
+    cat("Number of cores:", num_cores, fill = TRUE)
     # doParallel::registerDoParallel(cores = num_cores)
     # registerDoFuture()
     # cl <- makeCluster(num_cores)
