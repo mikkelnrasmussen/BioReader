@@ -147,11 +147,11 @@ if (opt$target == "class") {
 } else if (opt$target %in% unique(df_class_label$class)) {
   df_main <- df_merged |>
     filter(class == opt$target) |>
-    select(PubMed_ID, Abstract, Category)
+    select(PubMed_ID, Abstract, category)
 } else if (opt$target %in% unique(df_class_label$category)) {
   df_main <- df_merged |>
     filter(class == opt$target) |>
-    select(PubMed_ID, Abstract, Subcategory)
+    select(PubMed_ID, Abstract, subcategory)
 }
 colnames(df_main) <- c("pmid", "abstract", "target")
 df_main <- df_main |>
