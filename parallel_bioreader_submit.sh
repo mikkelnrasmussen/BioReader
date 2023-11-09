@@ -5,13 +5,13 @@
 ### -- set the job Name -- 
 #BSUB -J bioreader_parallel
 ### -- ask for 1 core -- 
-#BSUB -n 10 
+#BSUB -n 24
 ### -- specify that the cores must be on the same host -- 
 #BSUB -R "span[hosts=1]"
 ### -- specify that we need 2GB of memory per core/slot -- 
-#BSUB -R "rusage[mem=55GB]"
+#BSUB -R "rusage[mem=6GB]"
 ### -- specify that we want the job to get killed if it exceeds 3 GB per core/slot -- 
-#BSUB -M 56GB
+#BSUB -M 7GB
 ### -- set walltime limit: hh:mm -- 
 #BSUB -W 50:00 
 ### -- set the email address -- 
@@ -33,4 +33,4 @@ module load R/4.3.1-mkl2023update1
 export R_BATCH_OPTIONS="--no-save"
 mkdir -p time/
 # -- commands you want to execute -- # 
-/usr/bin/time -v -o time/bioreader.time Rscript src/R/minimal_example.R -a class --hpc
+/usr/bin/time -v -o time/bioreader.time Rscript src/R/minimal_example.R -a class -p --hpc -d _with_smote 
