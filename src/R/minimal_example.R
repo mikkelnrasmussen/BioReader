@@ -79,14 +79,19 @@ df_all_classes <- file_names |>
   map(\(x) read_csv(x, show_col_types = FALSE)) |>
   bind_rows()
 df_class_label <- read_excel(
-  "data/All_Updated_Categories_2019.xlsx"
+  "data/All_Updated_Categories_2019.xlsx",
+  na = "NA"
 )
 
 # If the category label is missing, then add the class
 # label instead
 df_class_label <- df_class_label |>
   mutate(
-    category = if_else(is.na(category), class, category)
+    category = if_else(
+      is.na(category) & class == "Other",
+      str_replace_all(Category, "\\s", "_"),
+      category
+    )
   )
 
 # If the subcategory label is missing add the one found in the
@@ -168,6 +173,10 @@ df_main <- df_main |>
 df_main |>
   is.na() |>
   colSums()
+
+# Drop rows with NAs
+df_main <- df_main |>
+  drop_na(target)
 
 # Check the distribution of the different classes
 df_main |>
