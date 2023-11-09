@@ -1,9 +1,9 @@
 ## Call libraries
 library("optparse")
 library("tidyverse")
-library("textrecipes") # not on DTU server
-library("tidymodels") # not on DTU server
-library("discrim") # not on DTU server
+library("textrecipes")
+library("tidymodels")
+library("discrim")
 library("plyr")
 library("baguette")
 library("rules")
@@ -49,6 +49,12 @@ option_list <- list(
     type = "character",
     default = "",
     help = "Any type of text you would like to append to result files [default: %default]"
+  ),
+  make_option(
+    c("-s", "--seed"),
+    type = "numeric",
+    default = 123,
+    help = "The seed used for random processes [default: %default]"
   )
 )
 
@@ -62,6 +68,7 @@ cat(paste("HPC:", opt$hpc), fill = TRUE)
 cat(paste("Parallel:", opt$parallel), fill = TRUE)
 cat(paste("Output directory:", opt$output_dir), fill = TRUE)
 cat(paste("Appending:", opt$append), fill = TRUE)
+cat(paste("Seed:", opt$seed), fill = TRUE)
 
 ###################################################################
 ######################### Load Data ###############################
@@ -169,18 +176,24 @@ df_main |>
 
 # Sample a subset of the data for testing
 if (opt$test) {
+  set.seed(opt$seed)
   df_main <- df_main |>
     group_by(target) |>
-    sample_n(min(n(), 200)) |>
+    sample_n(min(n(), 50)) |>
     ungroup()
+
+  df_main |>
+    group_by(target) |>
+    dplyr::summarise(n = n())
 }
+
 
 ###################################################################
 ######################## Modelling ################################
 ###################################################################
 
 # Create training and test set
-set.seed(123)
+set.seed(opt$seed)
 data_split <- initial_split(df_main, strata = target, prop = 0.80)
 training_data <- training(data_split)
 testing_data <- testing(data_split)
@@ -195,19 +208,6 @@ train_rec <- recipe(target ~ pmid + abstract, data = training_data) |>
   step_tfidf(abstract) |>
   step_smote(target)
 
-# Random Forest
-rf_spec <- rand_forest(
-  mtry = tune(),
-  trees = tune(),
-  min_n = tune()
-) |>
-  set_mode("classification") |>
-  set_engine("ranger")
-
-# Create a workflow
-workflow <- workflow() %>%
-  add_model(rf_spec) %>%
-  add_recipe(train_rec)
 
 # Create a grid of tuning parameters
 grid_ctrl <-
@@ -230,13 +230,9 @@ grid <- grid_regular(
 train_folds <- vfold_cv(data = training_data, v = 5)
 if (opt$parallel) {
   if (opt$hpc) {
-    # num_cores <- as.numeric(Sys.getenv("LSB_DJOB_NUMPROC"))
-    num_cores <- 16
+    num_cores <- as.numeric(Sys.getenv("LSB_DJOB_NUMPROC"))
+    # num_cores <- 16
     cat("Number of cores:", num_cores, fill = TRUE)
-    # doParallel::registerDoParallel(cores = num_cores)
-    # registerDoFuture()
-    # cl <- makeCluster(num_cores)
-    # cl
     doParallel::registerDoParallel(cores = num_cores)
   } else {
     num_cores <- detectCores()
@@ -244,6 +240,21 @@ if (opt$parallel) {
   }
 }
 
+# Random Forest
+rf_spec <- rand_forest(
+  mtry = tune(),
+  trees = tune(),
+  min_n = tune()
+) |>
+  set_mode("classification") |>
+  set_engine("ranger", num.threads = num_cores, importance = "impurity")
+
+# Create a workflow
+workflow <- workflow() %>%
+  add_model(rf_spec) %>%
+  add_recipe(train_rec)
+
+# Start time of training
 start_time <- Sys.time()
 start_time
 
@@ -260,12 +271,7 @@ time_taken <- end_time - start_time
 time_taken
 
 if (opt$parallel) {
-  if (opt$hpc) {
-    # parallel::stopCluster(cl)
-    doParallel::stopImplicitCluster()
-  } else {
-    doParallel::stopImplicitCluster()
-  }
+  doParallel::stopImplicitCluster()
 }
 
 tune_results %>%
@@ -283,14 +289,14 @@ tune_results %>%
 
 
 saved_abstract_modelset <- tune_results
-filename_model <- paste0(
+filename_model_tune <- paste0(
   opt$output_dir,
-  "saved_abstract_modelset_",
+  "tuning_results_",
   opt$target,
   opt$append,
   ".rds"
 )
-saveRDS(saved_abstract_modelset, filename_model)
+saveRDS(saved_abstract_modelset, filename_model_tune)
 
 # Select the best model based on accuracy
 best_model <- tune_results |>
@@ -303,6 +309,15 @@ final_wf <- workflow |>
 # Fit the best model on the training data and evaluate on the test data
 final_fit <- final_wf %>%
   last_fit(data_split)
+
+filename_model_fitted <- paste0(
+  opt$output_dir,
+  "model_fitted_on_train_and_val_",
+  opt$target,
+  opt$append,
+  ".rds"
+)
+saveRDS(final_fit, filename_model_fitted)
 
 # Collect the predictions from the final model fit
 predictions <- final_fit %>%
@@ -380,10 +395,25 @@ filename_mbc <- paste0(
   ".csv"
 )
 write_csv(metrics_by_class, file = filename_mbc)
-filename_mbc <- paste0(
+filename_overall <- paste0(
   opt$output_dir,
   "rf_overall_stats_",
   opt$target,
   opt$append,
   ".csv"
 )
+write_csv(overall_stats, file = filename_overall)
+
+# Fit the best model on the entire dataset
+final_fit <- fit(final_wf, data = df_main)
+
+# Save the fitted model
+filename_model_fitted <- paste0(
+  opt$output_dir,
+  "model_fitted_on_entire_data_",
+  opt$target,
+  opt$append,
+  ".rds"
+)
+saveRDS(final_fit, filename_model_fitted)
+final_model <- read_rds("results/model_fitted_on_train_and_val_class_micro_test.rds")
