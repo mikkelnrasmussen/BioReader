@@ -230,6 +230,7 @@ rf_spec <- rand_forest(
 workflow <- workflow() %>%
   add_model(rf_spec) %>%
   add_recipe(train_rec)
+workflow
 
 # Create a grid of tuning parameters
 grid_ctrl <-
