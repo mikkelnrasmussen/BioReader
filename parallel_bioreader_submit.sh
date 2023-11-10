@@ -5,7 +5,7 @@
 ### -- set the job Name -- 
 #BSUB -J bioreader_autoimm
 ### -- ask for 1 core -- 
-#BSUB -n 24
+#BSUB -n 32
 ### -- specify that the cores must be on the same host -- 
 #BSUB -R "span[hosts=1]"
 ### -- specify that we need 2GB of memory per core/slot -- 
