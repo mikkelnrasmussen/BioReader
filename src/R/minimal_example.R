@@ -424,4 +424,3 @@ filename_model_fitted <- paste0(
   ".rds"
 )
 saveRDS(final_fit, filename_model_fitted)
-final_model <- read_rds("results/model_fitted_on_train_and_val_class_micro_test.rds")
