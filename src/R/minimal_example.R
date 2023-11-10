@@ -217,6 +217,19 @@ train_rec <- recipe(target ~ pmid + abstract, data = training_data) |>
   step_tfidf(abstract) |>
   step_smote(target)
 
+# Random Forest
+rf_spec <- rand_forest(
+  mtry = tune(),
+  trees = tune(),
+  min_n = tune()
+) |>
+  set_mode("classification") |>
+  set_engine("ranger", importance = "impurity")
+
+# Create a workflow
+workflow <- workflow() %>%
+  add_model(rf_spec) %>%
+  add_recipe(train_rec)
 
 # Create a grid of tuning parameters
 grid_ctrl <-
@@ -248,20 +261,6 @@ if (opt$parallel) {
     doParallel::registerDoParallel(cores = num_cores)
   }
 }
-
-# Random Forest
-rf_spec <- rand_forest(
-  mtry = tune(),
-  trees = tune(),
-  min_n = tune()
-) |>
-  set_mode("classification") |>
-  set_engine("ranger", num.threads = num_cores, importance = "impurity")
-
-# Create a workflow
-workflow <- workflow() %>%
-  add_model(rf_spec) %>%
-  add_recipe(train_rec)
 
 # Start time of training
 start_time <- Sys.time()
