@@ -55,6 +55,12 @@ option_list <- list(
     type = "numeric",
     default = 123,
     help = "The seed used for random processes [default: %default]"
+  ),
+  make_option(
+    c("-u", "--upsample"),
+    action = "store_true",
+    default = FALSE,
+    help = "Whether to train the model with upsamling [default: %default]"
   )
 )
 
@@ -69,6 +75,7 @@ cat(paste("Parallel:", opt$parallel), fill = TRUE)
 cat(paste("Output directory:", opt$output_dir), fill = TRUE)
 cat(paste("Appending:", opt$append), fill = TRUE)
 cat(paste("Seed:", opt$seed), fill = TRUE)
+cat(paste("Upsample:", opt$upsample), fill = TRUE)
 
 ###################################################################
 ######################### Load Data ###############################
@@ -214,8 +221,12 @@ train_rec <- recipe(target ~ pmid + abstract, data = training_data) |>
   step_stopwords(abstract) |>
   step_stem(abstract) |>
   step_tokenfilter(abstract, max_tokens = tune()) |>
-  step_tfidf(abstract) |>
-  step_upsample(target)
+  step_tfidf(abstract)
+
+if (opt$upsample) {
+  train_rec <- train_rec |>
+    step_upsample(target)
+}
 
 # Random Forest
 rf_spec <- rand_forest(
