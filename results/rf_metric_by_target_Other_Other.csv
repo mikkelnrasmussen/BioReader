@@ -1,0 +1,56 @@
+Var1,Var2,Freq
+Class: Chemical,Sensitivity,0.3402061855670103
+Class: Model_Antigen,Sensitivity,0.8115501519756839
+Class: Peptidic_Antigen,Sensitivity,0.7235387045813586
+Class: Role,Sensitivity,0.734375
+Class: Technique_Based,Sensitivity,0.7909516380655226
+Class: Chemical,Specificity,0.9924690693921463
+Class: Model_Antigen,Specificity,0.9778733866011063
+Class: Peptidic_Antigen,Specificity,0.8253968253968254
+Class: Role,Specificity,0.9670588235294117
+Class: Technique_Based,Specificity,0.8737642585551331
+Class: Chemical,Pos Pred Value,0.7021276595744677
+Class: Model_Antigen,Pos Pred Value,0.8811881188118813
+Class: Peptidic_Antigen,Pos Pred Value,0.6647314949201741
+Class: Role,Pos Pred Value,0.7704918032786885
+Class: Technique_Based,Pos Pred Value,0.7533432392273403
+Class: Chemical,Neg Pred Value,0.9664745940282871
+Class: Model_Antigen,Neg Pred Value,0.9624924379915306
+Class: Peptidic_Antigen,Neg Pred Value,0.861878453038674
+Class: Role,Neg Pred Value,0.9602803738317758
+Class: Technique_Based,Neg Pred Value,0.8955572876071707
+Class: Chemical,Precision,0.7021276595744681
+Class: Model_Antigen,Precision,0.8811881188118812
+Class: Peptidic_Antigen,Precision,0.6647314949201741
+Class: Role,Precision,0.7704918032786885
+Class: Technique_Based,Precision,0.7533432392273403
+Class: Chemical,Recall,0.3402061855670103
+Class: Model_Antigen,Recall,0.8115501519756839
+Class: Peptidic_Antigen,Recall,0.7235387045813586
+Class: Role,Recall,0.734375
+Class: Technique_Based,Recall,0.7909516380655226
+Class: Chemical,F1,0.4583333333333334
+Class: Model_Antigen,F1,0.8449367088607596
+Class: Peptidic_Antigen,F1,0.6928895612708018
+Class: Role,F1,0.7519999999999999
+Class: Technique_Based,F1,0.771689497716895
+Class: Chemical,Prevalence,0.04959100204498978
+Class: Model_Antigen,Prevalence,0.16820040899795502
+Class: Peptidic_Antigen,Prevalence,0.3236196319018405
+Class: Role,Prevalence,0.130879345603272
+Class: Technique_Based,Prevalence,0.3277096114519427
+Class: Chemical,Detection Rate,0.01687116564417178
+Class: Model_Antigen,Detection Rate,0.13650306748466257
+Class: Peptidic_Antigen,Detection Rate,0.23415132924335377
+Class: Role,Detection Rate,0.09611451942740286
+Class: Technique_Based,Detection Rate,0.25920245398773006
+Class: Chemical,Detection Prevalence,0.024028629856850715
+Class: Model_Antigen,Detection Prevalence,0.1549079754601227
+Class: Peptidic_Antigen,Detection Prevalence,0.35224948875255624
+Class: Role,Detection Prevalence,0.12474437627811862
+Class: Technique_Based,Detection Prevalence,0.3440695296523517
+Class: Chemical,Balanced Accuracy,0.6663376274795783
+Class: Model_Antigen,Balanced Accuracy,0.8947117692883951
+Class: Peptidic_Antigen,Balanced Accuracy,0.774467764989092
+Class: Role,Balanced Accuracy,0.8507169117647059
+Class: Technique_Based,Balanced Accuracy,0.8323579483103278
