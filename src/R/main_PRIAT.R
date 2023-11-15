@@ -64,7 +64,7 @@ option_list <- list(
   ),
   make_option(
     c("-l", "--lcn"),
-    action = "character",
+    type = "character",
     default = NULL,
     help = "The node for which a Local Classifier per Node (LCN) classfier will be trained. When values is NULL a Local Classifier per Parent Node (LCPN) will be trained [default: %default]"
   )
@@ -269,6 +269,9 @@ if (!is.null(opt$lcn)) {
     mutate(target = as.factor(target))
 }
 
+if (df_main$target |> unique() |> length() < 2) {
+  stop("There is only one target variable. It is therefore not possible to train a classifier.")
+}
 
 # QC: Check if there are any NAs
 df_main |>
@@ -289,7 +292,7 @@ if (opt$test) {
   set.seed(opt$seed)
   df_main <- df_main |>
     group_by(target) |>
-    sample_n(min(n(), 50)) |>
+    sample_n(min(n(), 100)) |>
     ungroup()
 
   df_main |>
