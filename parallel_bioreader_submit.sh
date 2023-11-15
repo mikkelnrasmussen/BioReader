@@ -33,4 +33,4 @@ module load R/4.3.1-mkl2023update1
 export R_BATCH_OPTIONS="--no-save"
 mkdir -p time/
 # -- commands you want to execute -- # 
-/usr/bin/time -v -o time/bioreader.time Rscript src/R/minimal_example.R -a Autoimm -p --hpc
+/usr/bin/time -v -o time/bioreader.time Rscript src/R/main_PRIAT.R -a Autoimm -p --hpc
