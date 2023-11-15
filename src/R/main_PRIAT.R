@@ -61,6 +61,12 @@ option_list <- list(
     action = "store_true",
     default = FALSE,
     help = "Whether to train the model with upsamling [default: %default]"
+  ),
+  make_option(
+    c("-l", "--lcn"),
+    action = "character",
+    default = NULL,
+    help = "The node for which a Local Classifier per Node (LCN) classfier will be trained. When values is NULL a Local Classifier per Parent Node (LCPN) will be trained [default: %default]"
   )
 )
 
@@ -76,6 +82,7 @@ cat(paste("Output directory:", opt$output_dir), fill = TRUE)
 cat(paste("Appending:", opt$append), fill = TRUE)
 cat(paste("Seed:", opt$seed), fill = TRUE)
 cat(paste("Upsample:", opt$upsample), fill = TRUE)
+cat(paste("Local Classifier per Node (LCN):", opt$lcn), fill = TRUE)
 
 ###################################################################
 ######################### Load Data ###############################
@@ -90,6 +97,21 @@ df_class_label <- read_excel(
   na = "NA"
 )
 
+# Add the OTV label to other virus
+df_class_label <- df_class_label |>
+  mutate(
+    category = if_else(
+      subcategory == "Other_Virus",
+      subcategory,
+      category
+    ),
+    subcategory = if_else(
+      subcategory == "Other_Virus",
+      "OTV",
+      subcategory
+    )
+  )
+
 # If the category label is missing, then add the class
 # label instead
 df_class_label <- df_class_label |>
@@ -97,7 +119,11 @@ df_class_label <- df_class_label |>
     category = if_else(
       is.na(category) & class == "Other",
       str_replace_all(Category, "\\s", "_"),
-      category
+      if_else(
+        subcategory %in% c("MYA", "BETAAM"),
+        subcategory,
+        category
+      )
     )
   )
 
@@ -109,6 +135,11 @@ df_class_label <- df_class_label |>
       is.na(subcategory),
       Abbreviation,
       subcategory
+    ),
+    category = if_else(
+      is.na(category),
+      class,
+      category
     )
   )
 
@@ -123,12 +154,14 @@ df_all_classes_only <- df_all_classes |>
   select(SubType) |>
   pull() |>
   unique()
+print(df_all_classes_only) # Only 1-2 papers in these categories, will be ignored
 
 df_class_label_only <- df_class_label |>
   filter(!(subcategory %in% df_all_classes$SubType)) |>
   select(subcategory) |>
   pull() |>
   unique()
+print(df_class_label_only)
 
 # Perform inner join to only keep the categories that are in common
 df_merged <- df_all_classes |>
@@ -158,23 +191,84 @@ df_merged <- df_merged |>
 df_merged |>
   is.na() |>
   colSums()
+if (!is.null(opt$lcn)) {
+  # Local Classifier per Node (LCN)
+  if (opt$target == "class") {
+    # Select the class column
+    df_main <- df_merged |>
+      select(PubMed_ID, Abstract, opt$target)
 
-if (opt$target == "class") {
-  # Create dataframe with all the classes, category or subcategory
-  df_main <- df_merged |>
-    select(PubMed_ID, Abstract, opt$target)
-} else if (opt$target %in% unique(df_class_label$class)) {
-  df_main <- df_merged |>
-    filter(class == opt$target) |>
-    select(PubMed_ID, Abstract, category)
-} else if (opt$target %in% unique(df_class_label$category)) {
-  df_main <- df_merged |>
-    filter(class == opt$target) |>
-    select(PubMed_ID, Abstract, subcategory)
+    # Rename class column to target
+    colnames(df_main) <- c("pmid", "abstract", "target")
+
+    # Select the LCN and specify rest of nodes as negative
+    df_main <- df_main |>
+      mutate(
+        target = if_else(
+          target == opt$lcn,
+          opt$lcn,
+          "Negative"
+        )
+      )
+  } else if (opt$target %in% unique(df_class_label$class)) {
+    # Create dataframe with all the selected cateogory
+    df_main <- df_merged |>
+      filter(class == opt$target) |>
+      select(PubMed_ID, Abstract, category)
+
+    # Rename class column to target
+    colnames(df_main) <- c("pmid", "abstract", "target")
+
+    # Select the LCN and specify rest of nodes as negative
+    df_main <- df_main |>
+      mutate(
+        target = if_else(
+          target == opt$lcn,
+          opt$lcn,
+          "Negative"
+        )
+      )
+  } else if (opt$target %in% unique(df_class_label$category)) {
+    # Create dataframe with all the selected subcateogory
+    df_main <- df_merged |>
+      filter(category == opt$target) |>
+      select(PubMed_ID, Abstract, SubType)
+
+    # Rename class column to target
+    colnames(df_main) <- c("pmid", "abstract", "target")
+
+    # Select the LCN and specify rest of nodes as negative
+    df_main <- df_main |>
+      mutate(
+        target = if_else(
+          target == opt$lcn,
+          opt$lcn,
+          "Negative"
+        )
+      )
+  }
+} else {
+  # Local Classifier per Parent Node (LCPN)
+  if (opt$target == "class") {
+    # Create dataframe with all the selected class
+    df_main <- df_merged |>
+      select(PubMed_ID, Abstract, opt$target)
+  } else if (opt$target %in% unique(df_class_label$class)) {
+    # Create dataframe with all the selected cateogory
+    df_main <- df_merged |>
+      filter(class == opt$target) |>
+      select(PubMed_ID, Abstract, category)
+  } else if (opt$target %in% unique(df_class_label$category)) {
+    # Create dataframe with all the selected subcateogory
+    df_main <- df_merged |>
+      filter(category == opt$target) |>
+      select(PubMed_ID, Abstract, SubType)
+  }
+  colnames(df_main) <- c("pmid", "abstract", "target")
+  df_main <- df_main |>
+    mutate(target = as.factor(target))
 }
-colnames(df_main) <- c("pmid", "abstract", "target")
-df_main <- df_main |>
-  mutate(target = as.factor(target))
+
 
 # QC: Check if there are any NAs
 df_main |>
