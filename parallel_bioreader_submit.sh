@@ -3,7 +3,7 @@
 ### -- specify queue -- 
 #BSUB -q hpc
 ### -- set the job Name -- 
-#BSUB -J bioreader_autoimm
+#BSUB -J bioreader_infc_disease
 ### -- ask for 1 core -- 
 #BSUB -n 32
 ### -- specify that the cores must be on the same host -- 
@@ -13,7 +13,7 @@
 ### -- specify that we want the job to get killed if it exceeds 3 GB per core/slot -- 
 #BSUB -M 15.5GB
 ### -- set walltime limit: hh:mm -- 
-#BSUB -W 50:00 
+#BSUB -W 24:00 
 ### -- set the email address -- 
 # please uncomment the following line and put in your e-mail address,
 # if you want to receive e-mail notifications on a non-default address
@@ -33,4 +33,4 @@ module load R/4.3.1-mkl2023update1
 export R_BATCH_OPTIONS="--no-save"
 mkdir -p time/
 # -- commands you want to execute -- # 
-/usr/bin/time -v -o time/bioreader.time Rscript src/R/main_PRIAT.R -a Autoimm -p --hpc
+/usr/bin/time -v -o time/bioreader.time Rscript src/R/main_PRIAT.R -a Infectious_Disease -p --hpc
