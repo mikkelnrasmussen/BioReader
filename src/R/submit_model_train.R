@@ -149,7 +149,7 @@ df_class_label <- df_class_label |>
     )
   )
 
-for (target in unique(df_class_label$category)[1]) {
+for (target in unique(df_class_label$category)) {
   command <- paste(
     "/usr/bin/time -v -o time/bioreader.time Rscript src/R/main_PRIAT.R -a",
     target,
@@ -162,7 +162,7 @@ for (target in unique(df_class_label$category)[1]) {
   job_id <- submit(
     command = command,
     runtime = 720,
-    cores = 32,
+    cores = 10,
     ram = 7,
     job_name = job_name,
     jobscript = jobscript,
