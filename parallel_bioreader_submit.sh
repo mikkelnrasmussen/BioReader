@@ -3,7 +3,7 @@
 ### -- specify queue -- 
 #BSUB -q hpc
 ### -- set the job Name -- 
-#BSUB -J bioreader_infc_disease
+#BSUB -J bioreader_autoimm
 ### -- ask for 1 core -- 
 #BSUB -n 32
 ### -- specify that the cores must be on the same host -- 
@@ -33,4 +33,4 @@ module load R/4.3.1-mkl2023update1
 export R_BATCH_OPTIONS="--no-save"
 mkdir -p time/
 # -- commands you want to execute -- # 
-/usr/bin/time -v -o time/bioreader.time Rscript src/R/main_PRIAT.R -a Infectious_Disease -p --hpc
+/usr/bin/time -v -o time/bioreader.time Rscript src/R/main_PRIAT.R -a Autoimm -p --hpc
