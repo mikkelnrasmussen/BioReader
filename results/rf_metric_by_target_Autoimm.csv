@@ -1,0 +1,78 @@
+Var1,Var2,Freq
+Class: BETAAM,Sensitivity,0.9674418604651163
+Class: Diabetes,Sensitivity,0.9748201438848921
+Class: General_Autoimm,Sensitivity,0.8923654568210263
+Class: Lupus,Sensitivity,0.8385826771653543
+Class: MYA,Sensitivity,0.9615384615384616
+Class: Multiple_Sclerosis,Sensitivity,0.956989247311828
+Class: RA,Sensitivity,0.8834586466165414
+Class: BETAAM,Specificity,0.9965363681345868
+Class: Diabetes,Specificity,0.9918283963227783
+Class: General_Autoimm,Specificity,0.9401530967292971
+Class: Lupus,Specificity,0.9818365287588294
+Class: MYA,Specificity,1
+Class: Multiple_Sclerosis,Specificity,0.9865879828326181
+Class: RA,Specificity,0.9898477157360406
+Class: BETAAM,Pos Pred Value,0.9674418604651158
+Class: Diabetes,Pos Pred Value,0.9442508710801392
+Class: General_Autoimm,Pos Pred Value,0.8923654568210262
+Class: Lupus,Pos Pred Value,0.8554216867469877
+Class: MYA,Pos Pred Value,1
+Class: Multiple_Sclerosis,Pos Pred Value,0.9343832020997378
+Class: RA,Pos Pred Value,0.9215686274509801
+Class: BETAAM,Neg Pred Value,0.9965363681345868
+Class: Diabetes,Neg Pred Value,0.9964084145715751
+Class: General_Autoimm,Neg Pred Value,0.9401530967292971
+Class: Lupus,Neg Pred Value,0.9793658782083543
+Class: MYA,Neg Pred Value,0.9990850869167429
+Class: Multiple_Sclerosis,Neg Pred Value,0.9913746630727762
+Class: RA,Neg Pred Value,0.9843513377082281
+Class: BETAAM,Precision,0.9674418604651163
+Class: Diabetes,Precision,0.9442508710801394
+Class: General_Autoimm,Precision,0.8923654568210263
+Class: Lupus,Precision,0.8554216867469879
+Class: MYA,Precision,1
+Class: Multiple_Sclerosis,Precision,0.9343832020997376
+Class: RA,Precision,0.9215686274509803
+Class: BETAAM,Recall,0.9674418604651163
+Class: Diabetes,Recall,0.9748201438848921
+Class: General_Autoimm,Recall,0.8923654568210263
+Class: Lupus,Recall,0.8385826771653543
+Class: MYA,Recall,0.9615384615384616
+Class: Multiple_Sclerosis,Recall,0.956989247311828
+Class: RA,Recall,0.8834586466165414
+Class: BETAAM,F1,0.9674418604651163
+Class: Diabetes,F1,0.95929203539823
+Class: General_Autoimm,F1,0.8923654568210263
+Class: Lupus,F1,0.8469184890656064
+Class: MYA,F1,0.9803921568627451
+Class: Multiple_Sclerosis,F1,0.9455511288180611
+Class: RA,F1,0.9021113243761996
+Class: BETAAM,Prevalence,0.09615384615384616
+Class: Diabetes,Prevalence,0.12432915921288014
+Class: General_Autoimm,Prevalence,0.3573345259391771
+Class: Lupus,Prevalence,0.11359570661896243
+Class: MYA,Prevalence,0.023255813953488372
+Class: Multiple_Sclerosis,Prevalence,0.16636851520572452
+Class: RA,Prevalence,0.11896243291592129
+Class: BETAAM,Detection Rate,0.09302325581395349
+Class: Diabetes,Detection Rate,0.12119856887298748
+Class: General_Autoimm,Detection Rate,0.31887298747763865
+Class: Lupus,Detection Rate,0.09525939177101968
+Class: MYA,Detection Rate,0.022361359570661897
+Class: Multiple_Sclerosis,Detection Rate,0.1592128801431127
+Class: RA,Detection Rate,0.1050983899821109
+Class: BETAAM,Detection Prevalence,0.09615384615384616
+Class: Diabetes,Detection Prevalence,0.1283542039355993
+Class: General_Autoimm,Detection Prevalence,0.3573345259391771
+Class: Lupus,Detection Prevalence,0.11135957066189624
+Class: MYA,Detection Prevalence,0.022361359570661897
+Class: Multiple_Sclerosis,Detection Prevalence,0.17039355992844366
+Class: RA,Detection Prevalence,0.11404293381037567
+Class: BETAAM,Balanced Accuracy,0.9819891142998516
+Class: Diabetes,Balanced Accuracy,0.9833242701038352
+Class: General_Autoimm,Balanced Accuracy,0.9162592767751617
+Class: Lupus,Balanced Accuracy,0.9102096029620919
+Class: MYA,Balanced Accuracy,0.9807692307692308
+Class: Multiple_Sclerosis,Balanced Accuracy,0.971788615072223
+Class: RA,Balanced Accuracy,0.936653181176291
