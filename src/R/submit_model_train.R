@@ -1,3 +1,6 @@
+library("tidyverse")
+library("readxl")
+
 submit <- function(command, runtime, cores, ram, directory = "", modules = "",
                    job_name = "bioreader", email = "", queue = "hpc",
                    jobscript = "jobscript", output = "log/bioreader_%J.out",
@@ -146,24 +149,24 @@ df_class_label <- df_class_label |>
     )
   )
 
-for (target in unique(df_class_label$category)) {
+for (target in unique(df_class_label$category)[1]) {
   command <- paste(
     "/usr/bin/time -v -o time/bioreader.time Rscript src/R/main_PRIAT.R -a",
     target,
     "-p --hpc"
   )
-  job_name <- paste("bioreader_", target)
-  jobscript <- paste("log/jobscript_", target)
+  job_name <- paste0("bioreader_", target)
+  jobscript <- paste0("log/jobscript_", target)
 
   # Submit trainig of model usage
   job_id <- submit(
     command = command,
-    runtime <- 720,
-    cores <- 32,
-    ram <- 7,
+    runtime = 720,
+    cores = 32,
+    ram = 7,
     job_name = job_name,
     jobscript = jobscript,
-    email <- "s193518@dtu.dk",
-    modules <- "R/4.3.1-mkl2023update1",
+    email = "s193518@dtu.dk",
+    modules = "R/4.3.1-mkl2023update1",
   )
 }
