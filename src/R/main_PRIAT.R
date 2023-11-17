@@ -88,109 +88,13 @@ cat(paste("Local Classifier per Node (LCN):", opt$lcn), fill = TRUE)
 ######################### Load Data ###############################
 ###################################################################
 
-file_names <- dir("data/training_data", full.names = TRUE)
-df_all_classes <- file_names |>
-  map(\(x) read_csv(x, show_col_types = FALSE)) |>
-  bind_rows()
-df_class_label <- read_excel(
-  "data/All_Updated_Categories_2019.xlsx",
-  na = "NA"
-)
-
-# Add the OTV label to other virus
-df_class_label <- df_class_label |>
-  mutate(
-    category = if_else(
-      subcategory == "Other_Virus",
-      subcategory,
-      category
-    ),
-    subcategory = if_else(
-      subcategory == "Other_Virus",
-      "OTV",
-      subcategory
-    )
-  )
-
-# If the category label is missing, then add the class
-# label instead
-df_class_label <- df_class_label |>
-  mutate(
-    category = if_else(
-      is.na(category) & class == "Other",
-      str_replace_all(Category, "\\s", "_"),
-      if_else(
-        subcategory %in% c("MYA", "BETAAM"),
-        subcategory,
-        category
-      )
-    )
-  )
-
-# If the subcategory label is missing add the one found in the
-# Subcatgory column
-df_class_label <- df_class_label |>
-  mutate(
-    subcategory = if_else(
-      is.na(subcategory),
-      Abbreviation,
-      subcategory
-    ),
-    category = if_else(
-      is.na(category),
-      class,
-      category
-    )
-  )
+df_main <- read_csv("data/all_categories_merged.csv")
 
 ###################################################################
-###################### Quality Control ############################
+################### Select training data ##########################
 ###################################################################
 
-# Check if all the cateogries are present in both the metadata file
-# and the data files
-df_all_classes_only <- df_all_classes |>
-  filter(!(SubType %in% df_class_label$subcategory)) |>
-  select(SubType) |>
-  pull() |>
-  unique()
-print(df_all_classes_only) # Only 1-2 papers in these categories, will be ignored
 
-df_class_label_only <- df_class_label |>
-  filter(!(subcategory %in% df_all_classes$SubType)) |>
-  select(subcategory) |>
-  pull() |>
-  unique()
-print(df_class_label_only)
-
-# Perform inner join to only keep the categories that are in common
-df_merged <- df_all_classes |>
-  left_join(
-    df_class_label,
-    by = c("SubType" = "subcategory")
-  ) |>
-  filter(!(SubType %in% df_all_classes_only))
-
-# QC: Check which columns contain NAs
-df_merged |>
-  is.na() |>
-  colSums()
-
-# Let's fist look at the rows with missing titles
-df_merged |>
-  filter(is.na(Title))
-
-# There are some abstracts that look weird and starts with
-# "[Data extracted from this article was imported from"
-# Let's remove those
-weird_abstract <- "\\[Data extracted from this article was imported from"
-df_merged <- df_merged |>
-  filter(!str_detect(Abstract, weird_abstract))
-
-# Let's check again which columns contain NAs
-df_merged |>
-  is.na() |>
-  colSums()
 if (!is.null(opt$lcn)) {
   # Local Classifier per Node (LCN)
   if (opt$target == "class") {
