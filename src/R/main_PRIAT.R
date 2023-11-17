@@ -88,7 +88,7 @@ cat(paste("Local Classifier per Node (LCN):", opt$lcn), fill = TRUE)
 ######################### Load Data ###############################
 ###################################################################
 
-df_main <- read_csv("data/all_categories_merged.csv")
+df_merged <- read_csv("data/all_categories_merged.csv")
 
 ###################################################################
 ################### Select training data ##########################
