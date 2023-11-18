@@ -1,5 +1,6 @@
 library("tidyverse")
 library("readxl")
+library("here")
 
 submit <- function(command, runtime, cores, ram, directory = "", modules = "",
                    job_name = "bioreader", email = "", queue = "hpc",
@@ -95,7 +96,7 @@ submit <- function(command, runtime, cores, ram, directory = "", modules = "",
 ###################################################################
 
 df_class_label <- read_excel(
-  "data/_raw/All_Updated_Categories_2019.xlsx",
+  here("data/_raw/All_Updated_Categories_2019.xlsx"),
   na = "NA"
 )
 
