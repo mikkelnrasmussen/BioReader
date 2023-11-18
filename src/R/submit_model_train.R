@@ -99,7 +99,7 @@ df_all_classes <- file_names |>
   map(\(x) read_csv(x, show_col_types = FALSE)) |>
   bind_rows()
 df_class_label <- read_excel(
-  "data/All_Updated_Categories_2019.xlsx",
+  "data/_raw/All_Updated_Categories_2019.xlsx",
   na = "NA"
 )
 
@@ -149,7 +149,8 @@ df_class_label <- df_class_label |>
     )
   )
 
-for (target in unique(df_class_label$category)) {
+# for (target in unique(df_class_label$category)) {
+for (target in c("Other")) {
   command <- paste(
     "/usr/bin/time -v -o time/bioreader.time Rscript src/R/main_PRIAT.R -a",
     target,
@@ -161,7 +162,7 @@ for (target in unique(df_class_label$category)) {
   # Submit trainig of model usage
   job_id <- submit(
     command = command,
-    runtime = 720,
+    runtime = 1440,
     cores = 10,
     ram = 7,
     job_name = job_name,
