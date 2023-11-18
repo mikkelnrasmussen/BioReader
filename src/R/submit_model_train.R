@@ -94,10 +94,6 @@ submit <- function(command, runtime, cores, ram, directory = "", modules = "",
 ######################### Load Data ###############################
 ###################################################################
 
-file_names <- dir("data/training_data", full.names = TRUE)
-df_all_classes <- file_names |>
-  map(\(x) read_csv(x, show_col_types = FALSE)) |>
-  bind_rows()
 df_class_label <- read_excel(
   "data/_raw/All_Updated_Categories_2019.xlsx",
   na = "NA"
