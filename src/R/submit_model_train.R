@@ -1,6 +1,5 @@
 library("tidyverse")
 library("readxl")
-library("here")
 
 submit <- function(command, runtime, cores, ram, directory = "", modules = "",
                    job_name = "bioreader", email = "", queue = "hpc",
@@ -95,56 +94,56 @@ submit <- function(command, runtime, cores, ram, directory = "", modules = "",
 ######################### Load Data ###############################
 ###################################################################
 
-df_class_label <- read_excel(
-  here("data/_raw/All_Updated_Categories_2019.xlsx"),
-  na = "NA"
-)
+# df_class_label <- read_excel(
+#   "data/All_Updated_Categories_2019.xlsx",
+#   na = "NA"
+# )
 
-# Add the OTV label to other virus
-df_class_label <- df_class_label |>
-  mutate(
-    category = if_else(
-      subcategory == "Other_Virus",
-      subcategory,
-      category
-    ),
-    subcategory = if_else(
-      subcategory == "Other_Virus",
-      "OTV",
-      subcategory
-    )
-  )
+# # Add the OTV label to other virus
+# df_class_label <- df_class_label |>
+#   mutate(
+#     category = if_else(
+#       subcategory == "Other_Virus",
+#       subcategory,
+#       category
+#     ),
+#     subcategory = if_else(
+#       subcategory == "Other_Virus",
+#       "OTV",
+#       subcategory
+#     )
+#   )
 
-# If the category label is missing, then add the class
-# label instead
-df_class_label <- df_class_label |>
-  mutate(
-    category = if_else(
-      is.na(category) & class == "Other",
-      str_replace_all(Category, "\\s", "_"),
-      if_else(
-        subcategory %in% c("MYA", "BETAAM"),
-        subcategory,
-        category
-      )
-    )
-  )
+# # If the category label is missing, then add the class
+# # label instead
+# df_class_label <- df_class_label |>
+#   mutate(
+#     category = if_else(
+#       is.na(category) & class == "Other",
+#       str_replace_all(Category, "\\s", "_"),
+#       if_else(
+#         subcategory %in% c("MYA", "BETAAM"),
+#         subcategory,
+#         category
+#       )
+#     )
+#   )
 
-# If the subcategory label is missing add the one found in the
-# Subcatgory column
-df_class_label <- df_class_label |>
-  mutate(
-    subcategory = if_else(
-      is.na(subcategory),
-      Abbreviation,
-      subcategory
-    ),
-    category = if_else(
-      is.na(category),
-      class,
-      category
-    )
-  )
+# # If the subcategory label is missing add the one found in the
+# # Subcatgory column
+# df_class_label <- df_class_label |>
+#   mutate(
+#     subcategory = if_else(
+#       is.na(subcategory),
+#       Abbreviation,
+#       subcategory
+#     ),
+#     category = if_else(
+#       is.na(category),
+#       class,
+#       category
+#     )
+#   )
 
 # for (target in unique(df_class_label$category)) {
 for (target in c("Other")) {
