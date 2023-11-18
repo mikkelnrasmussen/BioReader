@@ -70,6 +70,7 @@ df_class_label <- df_class_label |>
       category
     )
   )
+write_csv(df_class_label, "data/class_info.csv")
 
 
 ###################################################################
