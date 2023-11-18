@@ -1,5 +1,4 @@
 library("tidyverse")
-library("readxl")
 
 submit <- function(command, runtime, cores, ram, directory = "", modules = "",
                    job_name = "bioreader", email = "", queue = "hpc",
@@ -94,7 +93,7 @@ submit <- function(command, runtime, cores, ram, directory = "", modules = "",
 ######################### Load Data ###############################
 ###################################################################
 
-df_class_label <- read_excel("data/class_info.csv")
+df_class_label <- read_csv("data/class_info.csv")
 
 # for (target in unique(df_class_label$category)) {
 for (target in c("Other")) {
