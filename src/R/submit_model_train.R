@@ -94,56 +94,7 @@ submit <- function(command, runtime, cores, ram, directory = "", modules = "",
 ######################### Load Data ###############################
 ###################################################################
 
-# df_class_label <- read_excel(
-#   "data/All_Updated_Categories_2019.xlsx",
-#   na = "NA"
-# )
-
-# # Add the OTV label to other virus
-# df_class_label <- df_class_label |>
-#   mutate(
-#     category = if_else(
-#       subcategory == "Other_Virus",
-#       subcategory,
-#       category
-#     ),
-#     subcategory = if_else(
-#       subcategory == "Other_Virus",
-#       "OTV",
-#       subcategory
-#     )
-#   )
-
-# # If the category label is missing, then add the class
-# # label instead
-# df_class_label <- df_class_label |>
-#   mutate(
-#     category = if_else(
-#       is.na(category) & class == "Other",
-#       str_replace_all(Category, "\\s", "_"),
-#       if_else(
-#         subcategory %in% c("MYA", "BETAAM"),
-#         subcategory,
-#         category
-#       )
-#     )
-#   )
-
-# # If the subcategory label is missing add the one found in the
-# # Subcatgory column
-# df_class_label <- df_class_label |>
-#   mutate(
-#     subcategory = if_else(
-#       is.na(subcategory),
-#       Abbreviation,
-#       subcategory
-#     ),
-#     category = if_else(
-#       is.na(category),
-#       class,
-#       category
-#     )
-#   )
+df_class_label <- read_excel("data/class_info.csv")
 
 # for (target in unique(df_class_label$category)) {
 for (target in c("Other")) {
@@ -158,7 +109,7 @@ for (target in c("Other")) {
   # Submit trainig of model usage
   job_id <- submit(
     command = command,
-    runtime = 1440,
+    runtime = 720,
     cores = 10,
     ram = 7,
     job_name = job_name,
