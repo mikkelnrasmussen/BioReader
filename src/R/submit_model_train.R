@@ -108,7 +108,7 @@ for (target in c("Other")) {
   # Submit trainig of model usage
   job_id <- submit(
     command = command,
-    runtime = 720,
+    runtime = 1440,
     cores = 10,
     ram = 7,
     job_name = job_name,
