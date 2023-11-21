@@ -1,0 +1,12 @@
+Var1,Freq
+Sensitivity,0.8
+Specificity,1
+Pos Pred Value,1
+Neg Pred Value,0.8333333333333334
+Precision,1
+Recall,0.8
+F1,0.888888888888889
+Prevalence,0.5
+Detection Rate,0.4
+Detection Prevalence,0.4
+Balanced Accuracy,0.9
