@@ -1,0 +1,5 @@
+Prediction,Reference,Freq
+Allergen,Allergen,8
+Negative,Allergen,2
+Allergen,Negative,0
+Negative,Negative,10
