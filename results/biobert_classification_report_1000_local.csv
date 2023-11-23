@@ -1,0 +1,12 @@
+                    precision    recall  f1-score   support
+
+          Allergen       0.00      0.00      0.00        56
+           Autoimm       0.73      0.81      0.77       149
+            Cancer       0.93      0.86      0.89       188
+Infectious_Disease       0.87      0.96      0.92       419
+             Other       0.53      0.65      0.59       159
+        Transplant       0.00      0.00      0.00        28
+
+          accuracy                           0.79       999
+         macro avg       0.51      0.55      0.53       999
+      weighted avg       0.73      0.79      0.76       999

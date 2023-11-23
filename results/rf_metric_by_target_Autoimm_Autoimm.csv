@@ -1,0 +1,56 @@
+Var1,Var2,Freq
+Class: Diabetes,Sensitivity,0.9739776951672863
+Class: General_Autoimm,Sensitivity,0.8942786069651741
+Class: Lupus,Sensitivity,0.8937007874015748
+Class: Multiple_Sclerosis,Sensitivity,0.9083769633507853
+Class: RA,Sensitivity,0.875
+Class: Diabetes,Specificity,0.9883177570093458
+Class: General_Autoimm,Specificity,0.9260832625318607
+Class: Lupus,Specificity,0.9814707585408222
+Class: Multiple_Sclerosis,Specificity,0.9862414008755472
+Class: RA,Specificity,0.9842012873025161
+Class: Diabetes,Pos Pred Value,0.9290780141843971
+Class: General_Autoimm,Pos Pred Value,0.8920595533498761
+Class: Lupus,Pos Pred Value,0.8764478764478764
+Class: Multiple_Sclerosis,Pos Pred Value,0.940379403794038
+Class: RA,Pos Pred Value,0.89811320754717
+Class: Diabetes,Neg Pred Value,0.9958799293702177
+Class: General_Autoimm,Neg Pred Value,0.9276595744680851
+Class: Lupus,Neg Pred Value,0.9843205574912891
+Class: Multiple_Sclerosis,Neg Pred Value,0.9782878411910669
+Class: RA,Neg Pred Value,0.9801864801864802
+Class: Diabetes,Precision,0.9290780141843972
+Class: General_Autoimm,Precision,0.892059553349876
+Class: Lupus,Precision,0.8764478764478765
+Class: Multiple_Sclerosis,Precision,0.940379403794038
+Class: RA,Precision,0.8981132075471698
+Class: Diabetes,Recall,0.9739776951672863
+Class: General_Autoimm,Recall,0.8942786069651741
+Class: Lupus,Recall,0.8937007874015748
+Class: Multiple_Sclerosis,Recall,0.9083769633507853
+Class: RA,Recall,0.875
+Class: Diabetes,F1,0.9509981851179674
+Class: General_Autoimm,F1,0.893167701863354
+Class: Lupus,F1,0.884990253411306
+Class: Multiple_Sclerosis,F1,0.9241011984021305
+Class: RA,F1,0.8864059590316573
+Class: Diabetes,Prevalence,0.13579000504795558
+Class: General_Autoimm,Prevalence,0.40585562847046946
+Class: Lupus,Prevalence,0.12821807168096921
+Class: Multiple_Sclerosis,Prevalence,0.1928319030792529
+Class: RA,Prevalence,0.13730439172135286
+Class: Diabetes,Detection Rate,0.13225643614336194
+Class: General_Autoimm,Detection Rate,0.3629480060575467
+Class: Lupus,Detection Rate,0.11458859162039374
+Class: Multiple_Sclerosis,Detection Rate,0.1751640585562847
+Class: RA,Detection Rate,0.12014134275618374
+Class: Diabetes,Detection Prevalence,0.14235234729934376
+Class: General_Autoimm,Detection Prevalence,0.40686521958606764
+Class: Lupus,Detection Prevalence,0.13074204946996468
+Class: Multiple_Sclerosis,Detection Prevalence,0.18626956082786472
+Class: RA,Detection Prevalence,0.1337708228167592
+Class: Diabetes,Balanced Accuracy,0.981147726088316
+Class: General_Autoimm,Balanced Accuracy,0.9101809347485175
+Class: Lupus,Balanced Accuracy,0.9375857729711985
+Class: Multiple_Sclerosis,Balanced Accuracy,0.9473091821131663
+Class: RA,Balanced Accuracy,0.929600643651258

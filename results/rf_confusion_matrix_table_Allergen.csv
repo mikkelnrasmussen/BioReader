@@ -1,0 +1,10 @@
+Prediction,Reference,Freq
+Eukar,Eukar,125
+other,Eukar,26
+plants,Eukar,5
+Eukar,other,6
+other,other,399
+plants,other,10
+Eukar,plants,10
+other,plants,15
+plants,plants,208

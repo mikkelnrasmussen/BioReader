@@ -1,0 +1,100 @@
+Var1,Var2,Freq
+Class: Ac1-9,Sensitivity,0.35714285714285715
+Class: MBP,Sensitivity,0.8854166666666666
+Class: MBP78,Sensitivity,0.1956521739130435
+Class: MOG,Sensitivity,0.991869918699187
+Class: OTMS,Sensitivity,0.20689655172413793
+Class: P139,Sensitivity,0.7058823529411765
+Class: PLP,Sensitivity,0.4117647058823529
+Class: TCR,Sensitivity,0.1111111111111111
+Class: VARMS,Sensitivity,0
+Class: Ac1-9,Specificity,1
+Class: MBP,Specificity,0.7272727272727273
+Class: MBP78,Specificity,0.9880952380952381
+Class: MOG,Specificity,0.8725868725868726
+Class: OTMS,Specificity,1
+Class: P139,Specificity,0.9798850574712644
+Class: PLP,Specificity,0.9972602739726028
+Class: TCR,Specificity,1
+Class: VARMS,Specificity,1
+Class: Ac1-9,Pos Pred Value,1
+Class: MBP,Pos Pred Value,0.5214723926380369
+Class: MBP78,Pos Pred Value,0.692307692307693
+Class: MOG,Pos Pred Value,0.7870967741935484
+Class: OTMS,Pos Pred Value,1
+Class: P139,Pos Pred Value,0.7741935483870972
+Class: PLP,Pos Pred Value,0.8750000000000004
+Class: TCR,Pos Pred Value,1
+Class: VARMS,Pos Pred Value,NA
+Class: Ac1-9,Neg Pred Value,0.9761273209549072
+Class: MBP,Neg Pred Value,0.9497716894977168
+Class: MBP78,Neg Pred Value,0.8997289972899729
+Class: MOG,Neg Pred Value,0.9955947136563877
+Class: OTMS,Neg Pred Value,0.9388297872340425
+Class: P139,Neg Pred Value,0.9715099715099715
+Class: PLP,Neg Pred Value,0.9732620320855615
+Class: TCR,Neg Pred Value,0.979002624671916
+Class: VARMS,Neg Pred Value,0.9633507853403142
+Class: Ac1-9,Precision,1
+Class: MBP,Precision,0.5214723926380368
+Class: MBP78,Precision,0.6923076923076923
+Class: MOG,Precision,0.7870967741935484
+Class: OTMS,Precision,1
+Class: P139,Precision,0.7741935483870968
+Class: PLP,Precision,0.875
+Class: TCR,Precision,1
+Class: VARMS,Precision,NA
+Class: Ac1-9,Recall,0.35714285714285715
+Class: MBP,Recall,0.8854166666666666
+Class: MBP78,Recall,0.1956521739130435
+Class: MOG,Recall,0.991869918699187
+Class: OTMS,Recall,0.20689655172413793
+Class: P139,Recall,0.7058823529411765
+Class: PLP,Recall,0.4117647058823529
+Class: TCR,Recall,0.1111111111111111
+Class: VARMS,Recall,0
+Class: Ac1-9,F1,0.5263157894736842
+Class: MBP,F1,0.6563706563706564
+Class: MBP78,F1,0.3050847457627119
+Class: MOG,F1,0.8776978417266187
+Class: OTMS,F1,0.34285714285714286
+Class: P139,F1,0.7384615384615385
+Class: PLP,F1,0.56
+Class: TCR,F1,0.19999999999999998
+Class: VARMS,F1,NA
+Class: Ac1-9,Prevalence,0.03664921465968586
+Class: MBP,Prevalence,0.2513089005235602
+Class: MBP78,Prevalence,0.12041884816753927
+Class: MOG,Prevalence,0.3219895287958115
+Class: OTMS,Prevalence,0.07591623036649214
+Class: P139,Prevalence,0.08900523560209424
+Class: PLP,Prevalence,0.04450261780104712
+Class: TCR,Prevalence,0.02356020942408377
+Class: VARMS,Prevalence,0.03664921465968586
+Class: Ac1-9,Detection Rate,0.013089005235602094
+Class: MBP,Detection Rate,0.22251308900523561
+Class: MBP78,Detection Rate,0.02356020942408377
+Class: MOG,Detection Rate,0.3193717277486911
+Class: OTMS,Detection Rate,0.015706806282722512
+Class: P139,Detection Rate,0.06282722513089005
+Class: PLP,Detection Rate,0.01832460732984293
+Class: TCR,Detection Rate,0.002617801047120419
+Class: VARMS,Detection Rate,0
+Class: Ac1-9,Detection Prevalence,0.013089005235602094
+Class: MBP,Detection Prevalence,0.42670157068062825
+Class: MBP78,Detection Prevalence,0.034031413612565446
+Class: MOG,Detection Prevalence,0.40575916230366493
+Class: OTMS,Detection Prevalence,0.015706806282722512
+Class: P139,Detection Prevalence,0.08115183246073299
+Class: PLP,Detection Prevalence,0.020942408376963352
+Class: TCR,Detection Prevalence,0.002617801047120419
+Class: VARMS,Detection Prevalence,0
+Class: Ac1-9,Balanced Accuracy,0.6785714285714286
+Class: MBP,Balanced Accuracy,0.806344696969697
+Class: MBP78,Balanced Accuracy,0.5918737060041408
+Class: MOG,Balanced Accuracy,0.9322283956430297
+Class: OTMS,Balanced Accuracy,0.603448275862069
+Class: P139,Balanced Accuracy,0.8428837052062205
+Class: PLP,Balanced Accuracy,0.7045124899274778
+Class: TCR,Balanced Accuracy,0.5555555555555556
+Class: VARMS,Balanced Accuracy,0.5

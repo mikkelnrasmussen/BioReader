@@ -1,0 +1,89 @@
+Var1,Var2,Freq
+Class: ABS,Sensitivity,0
+Class: APL,Sensitivity,0.8968253968253969
+Class: DNA,Sensitivity,0.5384615384615384
+Class: HIS,Sensitivity,0.6666666666666666
+Class: OTLUP,Sensitivity,0.6595744680851063
+Class: SM,Sensitivity,0.7272727272727273
+Class: SSA,Sensitivity,0.875
+Class: SSB,Sensitivity,0.4
+Class: ABS,Specificity,1
+Class: APL,Specificity,0.859375
+Class: DNA,Specificity,0.9649122807017544
+Class: HIS,Specificity,1
+Class: OTLUP,Specificity,0.8454106280193237
+Class: SM,Specificity,0.9870689655172413
+Class: SSA,Specificity,0.9878048780487805
+Class: SSB,Specificity,0.9959839357429718
+Class: ABS,Pos Pred Value,NA
+Class: APL,Pos Pred Value,0.8625954198473282
+Class: DNA,Pos Pred Value,0.6363636363636364
+Class: HIS,Pos Pred Value,1
+Class: OTLUP,Pos Pred Value,0.49206349206349204
+Class: SM,Pos Pred Value,0.8421052631578941
+Class: SSA,Pos Pred Value,0.6999999999999997
+Class: SSB,Pos Pred Value,0.666666666666664
+Class: ABS,Neg Pred Value,0.9566929133858267
+Class: APL,Neg Pred Value,0.894308943089431
+Class: DNA,Neg Pred Value,0.9482758620689655
+Class: HIS,Neg Pred Value,0.9879032258064516
+Class: OTLUP,Neg Pred Value,0.9162303664921466
+Class: SM,Neg Pred Value,0.974468085106383
+Class: SSA,Neg Pred Value,0.9959016393442623
+Class: SSB,Neg Pred Value,0.9880478087649402
+Class: ABS,Precision,NA
+Class: APL,Precision,0.8625954198473282
+Class: DNA,Precision,0.6363636363636364
+Class: HIS,Precision,1
+Class: OTLUP,Precision,0.49206349206349204
+Class: SM,Precision,0.8421052631578947
+Class: SSA,Precision,0.7
+Class: SSB,Precision,0.6666666666666666
+Class: ABS,Recall,0
+Class: APL,Recall,0.8968253968253969
+Class: DNA,Recall,0.5384615384615384
+Class: HIS,Recall,0.6666666666666666
+Class: OTLUP,Recall,0.6595744680851063
+Class: SM,Recall,0.7272727272727273
+Class: SSA,Recall,0.875
+Class: SSB,Recall,0.4
+Class: ABS,F1,NA
+Class: APL,F1,0.8793774319066149
+Class: DNA,F1,0.5833333333333334
+Class: HIS,F1,0.8
+Class: OTLUP,F1,0.5636363636363635
+Class: SM,F1,0.7804878048780488
+Class: SSA,F1,0.7777777777777777
+Class: SSB,F1,0.5
+Class: ABS,Prevalence,0.04330708661417323
+Class: APL,Prevalence,0.49606299212598426
+Class: DNA,Prevalence,0.10236220472440945
+Class: HIS,Prevalence,0.03543307086614173
+Class: OTLUP,Prevalence,0.18503937007874016
+Class: SM,Prevalence,0.08661417322834646
+Class: SSA,Prevalence,0.031496062992125984
+Class: SSB,Prevalence,0.01968503937007874
+Class: ABS,Detection Rate,0
+Class: APL,Detection Rate,0.4448818897637795
+Class: DNA,Detection Rate,0.05511811023622047
+Class: HIS,Detection Rate,0.023622047244094488
+Class: OTLUP,Detection Rate,0.1220472440944882
+Class: SM,Detection Rate,0.06299212598425197
+Class: SSA,Detection Rate,0.027559055118110236
+Class: SSB,Detection Rate,0.007874015748031496
+Class: ABS,Detection Prevalence,0
+Class: APL,Detection Prevalence,0.515748031496063
+Class: DNA,Detection Prevalence,0.08661417322834646
+Class: HIS,Detection Prevalence,0.023622047244094488
+Class: OTLUP,Detection Prevalence,0.24803149606299213
+Class: SM,Detection Prevalence,0.07480314960629922
+Class: SSA,Detection Prevalence,0.03937007874015748
+Class: SSB,Detection Prevalence,0.011811023622047244
+Class: ABS,Balanced Accuracy,0.5
+Class: APL,Balanced Accuracy,0.8781001984126984
+Class: DNA,Balanced Accuracy,0.7516869095816464
+Class: HIS,Balanced Accuracy,0.8333333333333333
+Class: OTLUP,Balanced Accuracy,0.752492548052215
+Class: SM,Balanced Accuracy,0.8571708463949843
+Class: SSA,Balanced Accuracy,0.9314024390243902
+Class: SSB,Balanced Accuracy,0.6979919678714859

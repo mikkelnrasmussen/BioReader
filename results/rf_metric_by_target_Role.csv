@@ -1,0 +1,78 @@
+Var1,Var2,Freq
+Class: ABIOT,Sensitivity,0.15384615384615385
+Class: FOOD,Sensitivity,0
+Class: HERB,Sensitivity,0.95
+Class: HORM,Sensitivity,0.8571428571428571
+Class: MED,Sensitivity,0.3953488372093023
+Class: PSYC,Sensitivity,0.6981132075471698
+Class: SEX,Sensitivity,0.4838709677419355
+Class: ABIOT,Specificity,1
+Class: FOOD,Specificity,1
+Class: HERB,Specificity,0.6923076923076923
+Class: HORM,Specificity,0.9559471365638766
+Class: MED,Specificity,0.9634703196347032
+Class: PSYC,Specificity,0.9569377990430622
+Class: SEX,Specificity,0.9913419913419913
+Class: ABIOT,Pos Pred Value,1
+Class: FOOD,Pos Pred Value,NA
+Class: HERB,Pos Pred Value,0.5757575757575758
+Class: HORM,Pos Pred Value,0.75
+Class: MED,Pos Pred Value,0.68
+Class: PSYC,Pos Pred Value,0.8043478260869565
+Class: SEX,Pos Pred Value,0.8823529411764701
+Class: ABIOT,Neg Pred Value,0.9576923076923077
+Class: FOOD,Neg Pred Value,0.9732824427480916
+Class: HERB,Neg Pred Value,0.9692307692307692
+Class: HORM,Neg Pred Value,0.9774774774774775
+Class: MED,Neg Pred Value,0.890295358649789
+Class: PSYC,Neg Pred Value,0.9259259259259259
+Class: SEX,Neg Pred Value,0.9346938775510204
+Class: ABIOT,Precision,1
+Class: FOOD,Precision,NA
+Class: HERB,Precision,0.5757575757575758
+Class: HORM,Precision,0.75
+Class: MED,Precision,0.68
+Class: PSYC,Precision,0.8043478260869565
+Class: SEX,Precision,0.8823529411764706
+Class: ABIOT,Recall,0.15384615384615385
+Class: FOOD,Recall,0
+Class: HERB,Recall,0.95
+Class: HORM,Recall,0.8571428571428571
+Class: MED,Recall,0.3953488372093023
+Class: PSYC,Recall,0.6981132075471698
+Class: SEX,Recall,0.4838709677419355
+Class: ABIOT,F1,0.2666666666666667
+Class: FOOD,F1,NA
+Class: HERB,F1,0.71698113207547165
+Class: HORM,F1,0.7999999999999999
+Class: MED,F1,0.5
+Class: PSYC,F1,0.7474747474747474
+Class: SEX,F1,0.625
+Class: ABIOT,Prevalence,0.04961832061068702
+Class: FOOD,Prevalence,0.026717557251908396
+Class: HERB,Prevalence,0.3053435114503817
+Class: HORM,Prevalence,0.13358778625954199
+Class: MED,Prevalence,0.16412213740458015
+Class: PSYC,Prevalence,0.20229007633587787
+Class: SEX,Prevalence,0.1183206106870229
+Class: ABIOT,Detection Rate,0.007633587786259542
+Class: FOOD,Detection Rate,0
+Class: HERB,Detection Rate,0.2900763358778626
+Class: HORM,Detection Rate,0.11450381679389313
+Class: MED,Detection Rate,0.0648854961832061
+Class: PSYC,Detection Rate,0.14122137404580154
+Class: SEX,Detection Rate,0.05725190839694656
+Class: ABIOT,Detection Prevalence,0.007633587786259542
+Class: FOOD,Detection Prevalence,0
+Class: HERB,Detection Prevalence,0.5038167938931297
+Class: HORM,Detection Prevalence,0.15267175572519084
+Class: MED,Detection Prevalence,0.09541984732824428
+Class: PSYC,Detection Prevalence,0.17557251908396945
+Class: SEX,Detection Prevalence,0.0648854961832061
+Class: ABIOT,Balanced Accuracy,0.5769230769230769
+Class: FOOD,Balanced Accuracy,0.5
+Class: HERB,Balanced Accuracy,0.8211538461538461
+Class: HORM,Balanced Accuracy,0.9065449968533669
+Class: MED,Balanced Accuracy,0.6794095784220028
+Class: PSYC,Balanced Accuracy,0.827525503295116
+Class: SEX,Balanced Accuracy,0.7376064795419635

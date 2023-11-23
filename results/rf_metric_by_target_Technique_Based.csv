@@ -1,0 +1,67 @@
+Var1,Var2,Freq
+Class: ANA,Sensitivity,0.2222222222222222
+Class: BIME,Sensitivity,0
+Class: CAT,Sensitivity,0.7777777777777778
+Class: MO,Sensitivity,0.48760330578512395
+Class: NP,Sensitivity,0.8319327731092437
+Class: ST,Sensitivity,0.9560439560439561
+Class: ANA,Specificity,1
+Class: BIME,Specificity,1
+Class: CAT,Specificity,0.9984301412872841
+Class: MO,Specificity,0.9542857142857143
+Class: NP,Specificity,0.9601518026565465
+Class: ST,Specificity,0.7127659574468085
+Class: ANA,Pos Pred Value,1
+Class: BIME,Pos Pred Value,NA
+Class: CAT,Pos Pred Value,0.8749999999999992
+Class: MO,Pos Pred Value,0.710843373493976
+Class: NP,Pos Pred Value,0.8250000000000002
+Class: ST,Pos Pred Value,0.8111888111888111
+Class: ANA,Neg Pred Value,0.9671875
+Class: BIME,Neg Pred Value,0.9907120743034056
+Class: CAT,Neg Pred Value,0.9968652037617555
+Class: MO,Neg Pred Value,0.8898756660746003
+Class: NP,Neg Pred Value,0.9619771863117871
+Class: ST,Neg Pred Value,0.9262672811059909
+Class: ANA,Precision,1
+Class: BIME,Precision,NA
+Class: CAT,Precision,0.875
+Class: MO,Precision,0.7108433734939759
+Class: NP,Precision,0.825
+Class: ST,Precision,0.8111888111888111
+Class: ANA,Recall,0.2222222222222222
+Class: BIME,Recall,0
+Class: CAT,Recall,0.7777777777777778
+Class: MO,Recall,0.48760330578512395
+Class: NP,Recall,0.8319327731092437
+Class: ST,Recall,0.9560439560439561
+Class: ANA,F1,0.3636363636363636
+Class: BIME,F1,NA
+Class: CAT,F1,0.823529411764706
+Class: MO,F1,0.5784313725490197
+Class: NP,F1,0.8284518828451883
+Class: ST,F1,0.8776796973518285
+Class: ANA,Prevalence,0.04179566563467492
+Class: BIME,Prevalence,0.009287925696594427
+Class: CAT,Prevalence,0.01393188854489164
+Class: MO,Prevalence,0.18730650154798761
+Class: NP,Prevalence,0.18421052631578946
+Class: ST,Prevalence,0.5634674922600619
+Class: ANA,Detection Rate,0.009287925696594427
+Class: BIME,Detection Rate,0
+Class: CAT,Detection Rate,0.010835913312693499
+Class: MO,Detection Rate,0.0913312693498452
+Class: NP,Detection Rate,0.15325077399380804
+Class: ST,Detection Rate,0.5386996904024768
+Class: ANA,Detection Prevalence,0.009287925696594427
+Class: BIME,Detection Prevalence,0
+Class: CAT,Detection Prevalence,0.01238390092879257
+Class: MO,Detection Prevalence,0.12848297213622292
+Class: NP,Detection Prevalence,0.18575851393188855
+Class: ST,Detection Prevalence,0.6640866873065016
+Class: ANA,Balanced Accuracy,0.6111111111111112
+Class: BIME,Balanced Accuracy,0.5
+Class: CAT,Balanced Accuracy,0.888103959532531
+Class: MO,Balanced Accuracy,0.7209445100354192
+Class: NP,Balanced Accuracy,0.8960422878828951
+Class: ST,Balanced Accuracy,0.8344049567453823
