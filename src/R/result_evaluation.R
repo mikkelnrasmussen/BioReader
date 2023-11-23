@@ -4,16 +4,9 @@ library("here")
 library("caret")
 library("gt")
 
-####################################################################
-################# Class classification - all data ##################
-####################################################################
-
-# Read in the cross-validation results for level 1 classifier
-tune_results <- read_rds(
-  "results/tuning_results_class.rds"
-)
-
-calculate_summary_statistics <- function(tune_results) {
+# Define function calculating summary statistics for cross-validation
+# results
+calc_summary_stats <- function(tune_results) {
   # Function to calculate and extract metrics
   calculate_and_extract_metrics <- function(predictions) {
     # Split the data by fold
@@ -132,49 +125,138 @@ calculate_summary_statistics <- function(tune_results) {
   return(final_results)
 }
 
-# Example usage:
-final_summary <- calculate_summary_statistics(tune_results)
+####################################################################
+################# Category classificaiton results ##################
+####################################################################
 
-final_table <- final_summary %>%
-  select(target, total, mean_auc, `Balanced Accuracy`) %>%
-  gt() %>%
-  tab_header(
-    title = "Classification Performance Summary"
-  ) %>%
-  cols_label(
-    target = "Level 1 category",
-    total = "Curatable abstracts",
-    mean_auc = "AUC individual category",
-    `Balanced Accuracy` = "Category prediction accuracy (%)"
-  ) %>%
-  fmt_number(
-    columns = c("mean_auc", "Balanced Accuracy"),
-    decimals = 3
-  ) %>%
-  tab_style(
-    style = list(
-      cell_fill(color = "#D3D3D3"),
-      cell_text(weight = "bold")
-    ),
-    locations = cells_body(
+df_class_label <- read_csv("data/class_info.csv")
+
+# List all CV results files
+tuning_result_files <- list.files(
+  "results",
+  pattern = "tuning_results_*",
+  full.names = TRUE
+)
+
+for (file in tuning_result_files) {
+  # Read in the cross-validation results for level 1 classifier
+  tune_results <- read_rds(file)
+  classifier_name <- basename(file) |>
+    str_remove("tuning_results_") |>
+    str_remove("\\.rds")
+
+  if (classifier_name %in% unique(df_class_label$class)) {
+    target_title <- "Level 2 category"
+  } else if (classifier_name %in% unique(df_class_label$category)) {
+    target_title <- "Level 3 category"
+  } else {
+    target_title <- "Level 1 category"
+  }
+
+  # Calculate the summary stats for the CV results
+  final_summary <- calc_summary_stats(tune_results)
+
+  # Create table
+  class_cv_table <- final_summary %>%
+    select(target, total, mean_auc, `Balanced Accuracy`) %>%
+    gt() %>%
+    tab_header(
+      title = paste0(
+        "Cross-Validation Classification Performance Summary - ",
+        classifier_name
+      )
+    ) %>%
+    cols_label(
+      target = target_title,
+      total = "Curatable abstracts",
+      mean_auc = "AUC individual category",
+      `Balanced Accuracy` = "Category prediction accuracy (%)"
+    ) %>%
+    fmt_number(
       columns = c("mean_auc", "Balanced Accuracy"),
-      rows = target == "Total"
+      decimals = 3
+    ) %>%
+    tab_style(
+      style = list(
+        cell_fill(color = "#D3D3D3"),
+        cell_text(weight = "bold")
+      ),
+      locations = cells_body(
+        columns = c("mean_auc", "Balanced Accuracy"),
+        rows = target == "Total"
+      )
+    ) %>%
+    tab_style(
+      style = cell_fill(color = "#14bf1d"),
+      locations = cells_body(
+        columns = "Balanced Accuracy",
+        rows = !is.na(`Balanced Accuracy`)
+      )
+    ) %>%
+    tab_style(
+      style = list(
+        cell_fill(color = "#D3D3D3"),
+        cell_text(weight = "bold")
+      ),
+      locations = cells_column_labels(columns = everything())
     )
-  ) %>%
-  tab_style(
-    style = cell_fill(color = "#14bf1d"),
-    locations = cells_body(
-      columns = "Balanced Accuracy",
-      rows = !is.na(`Balanced Accuracy`)
-    )
-  ) %>%
-  tab_style(
-    style = list(
-      cell_fill(color = "#D3D3D3"),
-      cell_text(weight = "bold")
-    ),
-    locations = cells_column_labels(columns = everything())
+
+  # Save the CV table results
+  table_name <- paste0("results/table_cv_results_", classifier_name, ".png")
+  gtsave(class_cv_table, table_name)
+
+
+  # Read in test results
+  test_filename <- paste0("results/rf_metric_by_target_", classifier_name, ".csv")
+  test_results_by_class <- read_csv(
+    test_filename,
+    col_names = c("target", "metric", "value"),
+    skip = 1
   )
 
-# Print the gt table
-print(final_table)
+  test_results_by_class <- test_results_by_class |>
+    mutate(target = str_remove(target, "Class: "))
+
+  class_test_table <- test_results_by_class |>
+    pivot_wider(names_from = metric, values_from = value) |>
+    select(target, `Balanced Accuracy`) |>
+    gt() %>%
+    tab_header(
+      title = "Test Classification Performance Summary"
+    ) %>%
+    cols_label(
+      target = target_title,
+      `Balanced Accuracy` = "Category prediction accuracy (%)"
+    ) %>%
+    fmt_number(
+      columns = c("Balanced Accuracy"),
+      decimals = 3
+    ) |>
+    tab_style(
+      style = list(
+        cell_fill(color = "#D3D3D3"),
+        cell_text(weight = "bold")
+      ),
+      locations = cells_body(
+        columns = c("Balanced Accuracy"),
+        rows = target == "Total"
+      )
+    ) %>%
+    tab_style(
+      style = cell_fill(color = "#14bf1d"),
+      locations = cells_body(
+        columns = "Balanced Accuracy",
+        rows = !is.na(`Balanced Accuracy`)
+      )
+    ) %>%
+    tab_style(
+      style = list(
+        cell_fill(color = "#D3D3D3"),
+        cell_text(weight = "bold")
+      ),
+      locations = cells_column_labels(columns = everything())
+    )
+  # Save the test table results
+  test_table_name <- paste0("results/table_test_results_", classifier_name, ".png")
+  gtsave(class_test_table, test_table_name)
+}
