@@ -1,0 +1,11 @@
+- One or more packages recorded in the lockfile are not installed.
+- Use `renv::status()` for more details.
+Target: class
+Test: FALSE
+HPC: TRUE
+Parallel: TRUE
+Output directory: results/
+Appending: _with_HIV
+Seed: 123
+Upsample: FALSE
+Local Classifier per Node (LCN): 

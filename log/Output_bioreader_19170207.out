@@ -1,0 +1,2 @@
+- One or more packages recorded in the lockfile are not installed.
+- Use `renv::status()` for more details.
