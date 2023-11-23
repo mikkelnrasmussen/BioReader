@@ -71,6 +71,16 @@ df_class_label <- df_class_label |>
     )
   )
 
+# Transform the Allergen categories to title case
+df_class_label <- df_class_label |>
+  mutate(
+    category = if_else(
+      class == "Allergen",
+      str_to_title(category),
+      category
+    )
+  )
+
 # Rename "Other" categories
 df_class_label <- df_class_label |>
   mutate(
