@@ -1,0 +1,52 @@
+- One or more packages recorded in the lockfile are not installed.
+- Use `renv::status()` for more details.
+Target: class
+Test: FALSE
+HPC: TRUE
+Parallel: TRUE
+Output directory: results/
+Appending: _with_HIV
+Seed: 123
+Upsample: FALSE
+Local Classifier per Node (LCN): 
+    pmid abstract   target 
+       0        0        0 
+# A tibble: 7 × 2
+  target                 n
+  <fct>              <int>
+1 Allergen            4019
+2 Autoimm            11167
+3 Cancer             10957
+4 HIV                 4317
+5 Infectious_Disease 27929
+6 Other              11511
+7 Transplant          1805
+══ Workflow ════════════════════════════════════════════════════════════════════
+Preprocessor: Recipe
+Model: rand_forest()
+
+── Preprocessor ────────────────────────────────────────────────────────────────
+5 Recipe Steps
+
+• step_tokenize()
+• step_stopwords()
+• step_stem()
+• step_tokenfilter()
+• step_tfidf()
+
+── Model ───────────────────────────────────────────────────────────────────────
+Random Forest Model Specification (classification)
+
+Main Arguments:
+  mtry = tune()
+  trees = tune()
+  min_n = tune()
+
+Engine-Specific Arguments:
+  importance = impurity
+
+Computational engine: ranger 
+
+Number of cores: 32
+[1] "2023-11-17 14:00:43 CET"
+Time difference of 1.988008 days

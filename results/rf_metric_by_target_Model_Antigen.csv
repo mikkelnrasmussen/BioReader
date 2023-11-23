@@ -1,0 +1,122 @@
+Var1,Var2,Freq
+Class: AZOB,Sensitivity,0.75
+Class: CLIP,Sensitivity,0.6666666666666666
+Class: FITC,Sensitivity,0.4117647058823529
+Class: LYS,Sensitivity,0.9411764705882353
+Class: MYO,Sensitivity,0.8888888888888888
+Class: NITRO,Sensitivity,0.85
+Class: OTDNP,Sensitivity,0.9701492537313433
+Class: OVA,Sensitivity,0.6923076923076923
+Class: OXA,Sensitivity,0.42857142857142855
+Class: PCYT,Sensitivity,1
+Class: PHOS,Sensitivity,0.5714285714285714
+Class: AZOB,Specificity,1
+Class: CLIP,Specificity,1
+Class: FITC,Specificity,1
+Class: LYS,Specificity,1
+Class: MYO,Specificity,1
+Class: NITRO,Specificity,0.9870550161812298
+Class: OTDNP,Specificity,0.8358974358974359
+Class: OVA,Specificity,0.9873417721518988
+Class: OXA,Specificity,1
+Class: PCYT,Specificity,0.9933554817275747
+Class: PHOS,Specificity,0.9968253968253968
+Class: AZOB,Pos Pred Value,1
+Class: CLIP,Pos Pred Value,1
+Class: FITC,Pos Pred Value,1
+Class: LYS,Pos Pred Value,1
+Class: MYO,Pos Pred Value,1
+Class: NITRO,Pos Pred Value,0.8095238095238101
+Class: OTDNP,Pos Pred Value,0.8024691358024691
+Class: OVA,Pos Pred Value,0.692307692307693
+Class: OXA,Pos Pred Value,1
+Class: PCYT,Pos Pred Value,0.9333333333333329
+Class: PHOS,Pos Pred Value,0.8888888888888892
+Class: AZOB,Neg Pred Value,0.9807073954983924
+Class: CLIP,Neg Pred Value,0.9969418960244648
+Class: FITC,Neg Pred Value,0.968944099378882
+Class: LYS,Neg Pred Value,0.98932384341637
+Class: MYO,Neg Pred Value,0.9936102236421724
+Class: NITRO,Neg Pred Value,0.9902597402597403
+Class: OTDNP,Neg Pred Value,0.9760479041916169
+Class: OVA,Neg Pred Value,0.9873417721518988
+Class: OXA,Neg Pred Value,0.9877300613496932
+Class: PCYT,Neg Pred Value,1
+Class: PHOS,Neg Pred Value,0.98125
+Class: AZOB,Precision,1
+Class: CLIP,Precision,1
+Class: FITC,Precision,1
+Class: LYS,Precision,1
+Class: MYO,Precision,1
+Class: NITRO,Precision,0.8095238095238095
+Class: OTDNP,Precision,0.8024691358024691
+Class: OVA,Precision,0.6923076923076923
+Class: OXA,Precision,1
+Class: PCYT,Precision,0.9333333333333333
+Class: PHOS,Precision,0.8888888888888888
+Class: AZOB,Recall,0.75
+Class: CLIP,Recall,0.6666666666666666
+Class: FITC,Recall,0.4117647058823529
+Class: LYS,Recall,0.9411764705882353
+Class: MYO,Recall,0.8888888888888888
+Class: NITRO,Recall,0.85
+Class: OTDNP,Recall,0.9701492537313433
+Class: OVA,Recall,0.6923076923076923
+Class: OXA,Recall,0.42857142857142855
+Class: PCYT,Recall,1
+Class: PHOS,Recall,0.5714285714285714
+Class: AZOB,F1,0.8571428571428571
+Class: CLIP,F1,0.8
+Class: FITC,F1,0.5833333333333334
+Class: LYS,F1,0.9696969696969697
+Class: MYO,F1,0.9411764705882353
+Class: NITRO,F1,0.8292682926829269
+Class: OTDNP,F1,0.8783783783783784
+Class: OVA,F1,0.6923076923076923
+Class: OXA,F1,0.6
+Class: PCYT,F1,0.9655172413793104
+Class: PHOS,F1,0.6956521739130435
+Class: AZOB,Prevalence,0.0729483282674772
+Class: CLIP,Prevalence,0.00911854103343465
+Class: FITC,Prevalence,0.05167173252279635
+Class: LYS,Prevalence,0.15501519756838905
+Class: MYO,Prevalence,0.0547112462006079
+Class: NITRO,Prevalence,0.060790273556231005
+Class: OTDNP,Prevalence,0.4072948328267477
+Class: OVA,Prevalence,0.03951367781155015
+Class: OXA,Prevalence,0.02127659574468085
+Class: PCYT,Prevalence,0.0851063829787234
+Class: PHOS,Prevalence,0.0425531914893617
+Class: AZOB,Detection Rate,0.0547112462006079
+Class: CLIP,Detection Rate,0.0060790273556231
+Class: FITC,Detection Rate,0.02127659574468085
+Class: LYS,Detection Rate,0.1458966565349544
+Class: MYO,Detection Rate,0.0486322188449848
+Class: NITRO,Detection Rate,0.05167173252279635
+Class: OTDNP,Detection Rate,0.3951367781155015
+Class: OVA,Detection Rate,0.02735562310030395
+Class: OXA,Detection Rate,0.00911854103343465
+Class: PCYT,Detection Rate,0.0851063829787234
+Class: PHOS,Detection Rate,0.0243161094224924
+Class: AZOB,Detection Prevalence,0.0547112462006079
+Class: CLIP,Detection Prevalence,0.0060790273556231
+Class: FITC,Detection Prevalence,0.02127659574468085
+Class: LYS,Detection Prevalence,0.1458966565349544
+Class: MYO,Detection Prevalence,0.0486322188449848
+Class: NITRO,Detection Prevalence,0.06382978723404255
+Class: OTDNP,Detection Prevalence,0.49240121580547114
+Class: OVA,Detection Prevalence,0.03951367781155015
+Class: OXA,Detection Prevalence,0.00911854103343465
+Class: PCYT,Detection Prevalence,0.0911854103343465
+Class: PHOS,Detection Prevalence,0.02735562310030395
+Class: AZOB,Balanced Accuracy,0.875
+Class: CLIP,Balanced Accuracy,0.8333333333333333
+Class: FITC,Balanced Accuracy,0.7058823529411764
+Class: LYS,Balanced Accuracy,0.9705882352941176
+Class: MYO,Balanced Accuracy,0.9444444444444444
+Class: NITRO,Balanced Accuracy,0.9185275080906149
+Class: OTDNP,Balanced Accuracy,0.9030233448143896
+Class: OVA,Balanced Accuracy,0.8398247322297956
+Class: OXA,Balanced Accuracy,0.7142857142857143
+Class: PCYT,Balanced Accuracy,0.9966777408637874
+Class: PHOS,Balanced Accuracy,0.7841269841269841

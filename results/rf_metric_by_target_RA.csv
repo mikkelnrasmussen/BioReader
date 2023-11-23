@@ -1,0 +1,89 @@
+Var1,Var2,Freq
+Class: C260,Sensitivity,0.3333333333333333
+Class: CCP,Sensitivity,0.9541984732824428
+Class: CII,Sensitivity,0.8913043478260869
+Class: HC,Sensitivity,0
+Class: HSPRA,Sensitivity,0.5714285714285714
+Class: OTRA,Sensitivity,0.5813953488372093
+Class: RAM,Sensitivity,0
+Class: RF,Sensitivity,0.6
+Class: C260,Specificity,0.9961240310077519
+Class: CCP,Specificity,0.8450704225352113
+Class: CII,Specificity,0.9118942731277533
+Class: HC,Specificity,1
+Class: HSPRA,Specificity,0.9961389961389961
+Class: OTRA,Specificity,0.9173913043478261
+Class: RAM,Specificity,1
+Class: RF,Specificity,1
+Class: C260,Pos Pred Value,0.833333333333333
+Class: CCP,Pos Pred Value,0.8503401360544217
+Class: CII,Pos Pred Value,0.6721311475409836
+Class: HC,Pos Pred Value,NA
+Class: HSPRA,Pos Pred Value,0.8888888888888892
+Class: OTRA,Pos Pred Value,0.5681818181818183
+Class: RAM,Pos Pred Value,NA
+Class: RF,Pos Pred Value,1
+Class: C260,Neg Pred Value,0.9625468164794008
+Class: CCP,Neg Pred Value,0.9523809523809524
+Class: CII,Neg Pred Value,0.9764150943396226
+Class: HC,Neg Pred Value,0.967032967032967
+Class: HSPRA,Neg Pred Value,0.9772727272727273
+Class: OTRA,Neg Pred Value,0.9213973799126638
+Class: RAM,Neg Pred Value,0.9816849816849816
+Class: RF,Neg Pred Value,0.9850187265917604
+Class: C260,Precision,0.8333333333333334
+Class: CCP,Precision,0.8503401360544217
+Class: CII,Precision,0.6721311475409836
+Class: HC,Precision,NA
+Class: HSPRA,Precision,0.8888888888888888
+Class: OTRA,Precision,0.5681818181818182
+Class: RAM,Precision,NA
+Class: RF,Precision,1
+Class: C260,Recall,0.3333333333333333
+Class: CCP,Recall,0.9541984732824428
+Class: CII,Recall,0.8913043478260869
+Class: HC,Recall,0
+Class: HSPRA,Recall,0.5714285714285714
+Class: OTRA,Recall,0.5813953488372093
+Class: RAM,Recall,0
+Class: RF,Recall,0.6
+Class: C260,F1,0.47619047619047616
+Class: CCP,F1,0.8992805755395683
+Class: CII,F1,0.7663551401869158
+Class: HC,F1,NA
+Class: HSPRA,F1,0.6956521739130435
+Class: OTRA,F1,0.5747126436781609
+Class: RAM,F1,NA
+Class: RF,F1,0.7499999999999999
+Class: C260,Prevalence,0.054945054945054944
+Class: CCP,Prevalence,0.47985347985347987
+Class: CII,Prevalence,0.1684981684981685
+Class: HC,Prevalence,0.03296703296703297
+Class: HSPRA,Prevalence,0.05128205128205128
+Class: OTRA,Prevalence,0.1575091575091575
+Class: RAM,Prevalence,0.018315018315018316
+Class: RF,Prevalence,0.03663003663003663
+Class: C260,Detection Rate,0.018315018315018316
+Class: CCP,Detection Rate,0.45787545787545786
+Class: CII,Detection Rate,0.15018315018315018
+Class: HC,Detection Rate,0
+Class: HSPRA,Detection Rate,0.029304029304029304
+Class: OTRA,Detection Rate,0.09157509157509157
+Class: RAM,Detection Rate,0
+Class: RF,Detection Rate,0.02197802197802198
+Class: C260,Detection Prevalence,0.02197802197802198
+Class: CCP,Detection Prevalence,0.5384615384615384
+Class: CII,Detection Prevalence,0.22344322344322345
+Class: HC,Detection Prevalence,0
+Class: HSPRA,Detection Prevalence,0.03296703296703297
+Class: OTRA,Detection Prevalence,0.16117216117216118
+Class: RAM,Detection Prevalence,0
+Class: RF,Detection Prevalence,0.02197802197802198
+Class: C260,Balanced Accuracy,0.6647286821705426
+Class: CCP,Balanced Accuracy,0.899634447908827
+Class: CII,Balanced Accuracy,0.9015993104769201
+Class: HC,Balanced Accuracy,0.5
+Class: HSPRA,Balanced Accuracy,0.7837837837837838
+Class: OTRA,Balanced Accuracy,0.7493933265925177
+Class: RAM,Balanced Accuracy,0.5
+Class: RF,Balanced Accuracy,0.8

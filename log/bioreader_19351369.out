@@ -1,0 +1,70 @@
+- One or more packages recorded in the lockfile are not installed.
+- Use `renv::status()` for more details.
+Target: Allergen
+Test: FALSE
+HPC: TRUE
+Parallel: TRUE
+Output directory: results/
+Appending: 
+Seed: 123
+Upsample: FALSE
+Local Classifier per Node (LCN): 
+[1] "ALPH"    "LENT"    "MHCLE"   "MPB78"   "OID"     "OTsdDNA" "RA"     
+[1] "HIV"
+   PubMed_ID        Title     Abstract      SubType        Class     Category 
+           0            8            0            0            0        15778 
+ Subcategory Abbreviation           OK        class     category 
+           0            0          478            0            0 
+# A tibble: 8 × 11
+  PubMed_ID Title Abstract SubType Class Category Subcategory Abbreviation OK   
+      <dbl> <chr> <chr>    <chr>   <chr> <chr>    <chr>       <chr>        <chr>
+1   8567982 <NA>  [Data e… HBV     Infe… Retro-T… Hepatitis … HBV          x    
+2  11006009 <NA>  [Data e… HCV     Infe… ssRNA (… Hepatitis … HCV          x    
+3  11426965 <NA>  [Data e… HPV     Infe… dsDNA V… Human papi… HPV          x    
+4  15001714 <NA>  CD8 T l… MAA     Canc… <NA>     Tyrosinase… MAA          x    
+5  15585860 <NA>  Structu… MOAB    Other Peptidi… General Mo… MOAB         x    
+6  11012976 <NA>  [Data e… OTFLU   Infe… ssRNA (… Other Infl… OTFLU        x    
+7  29572442 <NA>  The B c… OTLUP   Auto… Lupus    Other       OTLUP        x    
+8  14724640 <NA>  Cytotox… RENAL   Canc… <NA>     Renal (RCC) RENAL        x    
+# ℹ 2 more variables: class <chr>, category <chr>
+   PubMed_ID        Title     Abstract      SubType        Class     Category 
+           0            4            0            0            0        15778 
+ Subcategory Abbreviation           OK        class     category 
+           0            0          478            0            0 
+    pmid abstract   target 
+       0        0        0 
+# A tibble: 3 × 2
+  target     n
+  <fct>  <int>
+1 Eukar    780
+2 other   2075
+3 plants  1164
+══ Workflow ════════════════════════════════════════════════════════════════════
+Preprocessor: Recipe
+Model: rand_forest()
+
+── Preprocessor ────────────────────────────────────────────────────────────────
+5 Recipe Steps
+
+• step_tokenize()
+• step_stopwords()
+• step_stem()
+• step_tokenfilter()
+• step_tfidf()
+
+── Model ───────────────────────────────────────────────────────────────────────
+Random Forest Model Specification (classification)
+
+Main Arguments:
+  mtry = tune()
+  trees = tune()
+  min_n = tune()
+
+Engine-Specific Arguments:
+  importance = impurity
+
+Computational engine: ranger 
+
+Number of cores: 32
+[1] "2023-11-16 20:52:02 CET"
+Time difference of 58.09505 mins

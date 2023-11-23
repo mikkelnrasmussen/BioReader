@@ -1,0 +1,78 @@
+Var1,Var2,Freq
+Class: BOT,Sensitivity,0.375
+Class: FIB,Sensitivity,0
+Class: INTG,Sensitivity,0
+Class: INTL,Sensitivity,0
+Class: LIPO,Sensitivity,0
+Class: MOAB,Sensitivity,0.8803986710963455
+Class: TOT,Sensitivity,0.8281938325991189
+Class: BOT,Specificity,0.9542961608775137
+Class: FIB,Specificity,1
+Class: INTG,Specificity,1
+Class: INTL,Specificity,1
+Class: LIPO,Specificity,1
+Class: MOAB,Specificity,0.718562874251497
+Class: TOT,Specificity,0.9264705882352942
+Class: BOT,Pos Pred Value,0.5689655172413791
+Class: FIB,Pos Pred Value,NA
+Class: INTG,Pos Pred Value,NA
+Class: INTL,Pos Pred Value,NA
+Class: LIPO,Pos Pred Value,NA
+Class: MOAB,Pos Pred Value,0.7381615598885795
+Class: TOT,Pos Pred Value,0.8623853211009175
+Class: BOT,Neg Pred Value,0.9046793760831889
+Class: FIB,Neg Pred Value,0.9921259842519685
+Class: INTG,Neg Pred Value,0.9937007874015749
+Class: INTL,Neg Pred Value,0.988976377952756
+Class: LIPO,Neg Pred Value,0.9952755905511811
+Class: MOAB,Neg Pred Value,0.8695652173913043
+Class: TOT,Neg Pred Value,0.9064748201438849
+Class: BOT,Precision,0.5689655172413793
+Class: FIB,Precision,NA
+Class: INTG,Precision,NA
+Class: INTL,Precision,NA
+Class: LIPO,Precision,NA
+Class: MOAB,Precision,0.7381615598885793
+Class: TOT,Precision,0.8623853211009175
+Class: BOT,Recall,0.375
+Class: FIB,Recall,0
+Class: INTG,Recall,0
+Class: INTL,Recall,0
+Class: LIPO,Recall,0
+Class: MOAB,Recall,0.8803986710963455
+Class: TOT,Recall,0.8281938325991189
+Class: BOT,F1,0.4520547945205479
+Class: FIB,F1,NA
+Class: INTG,F1,NA
+Class: INTL,F1,NA
+Class: LIPO,F1,NA
+Class: MOAB,F1,0.8030303030303029
+Class: TOT,F1,0.8449438202247191
+Class: BOT,Prevalence,0.13858267716535433
+Class: FIB,Prevalence,0.007874015748031496
+Class: INTG,Prevalence,0.006299212598425197
+Class: INTL,Prevalence,0.011023622047244094
+Class: LIPO,Prevalence,0.004724409448818898
+Class: MOAB,Prevalence,0.47401574803149604
+Class: TOT,Prevalence,0.35748031496062993
+Class: BOT,Detection Rate,0.05196850393700787
+Class: FIB,Detection Rate,0
+Class: INTG,Detection Rate,0
+Class: INTL,Detection Rate,0
+Class: LIPO,Detection Rate,0
+Class: MOAB,Detection Rate,0.41732283464566927
+Class: TOT,Detection Rate,0.29606299212598425
+Class: BOT,Detection Prevalence,0.09133858267716535
+Class: FIB,Detection Prevalence,0
+Class: INTG,Detection Prevalence,0
+Class: INTL,Detection Prevalence,0
+Class: LIPO,Detection Prevalence,0
+Class: MOAB,Detection Prevalence,0.5653543307086614
+Class: TOT,Detection Prevalence,0.34330708661417325
+Class: BOT,Balanced Accuracy,0.6646480804387569
+Class: FIB,Balanced Accuracy,0.5
+Class: INTG,Balanced Accuracy,0.5
+Class: INTL,Balanced Accuracy,0.5
+Class: LIPO,Balanced Accuracy,0.5
+Class: MOAB,Balanced Accuracy,0.7994807726739213
+Class: TOT,Balanced Accuracy,0.8773322104172065

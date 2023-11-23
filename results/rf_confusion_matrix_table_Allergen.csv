@@ -1,10 +1,10 @@
 Prediction,Reference,Freq
-Eukaryota (Non-Plant),Eukaryota (Non-Plant),127
-Other Allergen,Eukaryota (Non-Plant),26
-Plant,Eukaryota (Non-Plant),3
-Eukaryota (Non-Plant),Other Allergen,8
-Other Allergen,Other Allergen,398
-Plant,Other Allergen,9
-Eukaryota (Non-Plant),Plant,9
-Other Allergen,Plant,15
-Plant,Plant,209
+Eukar,Eukar,125
+other,Eukar,26
+plants,Eukar,5
+Eukar,other,6
+other,other,399
+plants,other,10
+Eukar,plants,10
+other,plants,15
+plants,plants,208
