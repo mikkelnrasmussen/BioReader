@@ -1,0 +1,78 @@
+Var1,Var2,Freq
+Class: GANG,Sensitivity,0.8181818181818182
+Class: GLYC,Sensitivity,0.5
+Class: GUAN,Sensitivity,0.5454545454545454
+Class: METAL,Sensitivity,0.2
+Class: OTGAL,Sensitivity,0.9565217391304348
+Class: PROST,Sensitivity,0.5
+Class: STER,Sensitivity,0.6666666666666666
+Class: GANG,Specificity,0.9705882352941176
+Class: GLYC,Specificity,1
+Class: GUAN,Specificity,0.9746835443037974
+Class: METAL,Specificity,1
+Class: OTGAL,Specificity,0.6716417910447762
+Class: PROST,Specificity,1
+Class: STER,Specificity,0.9876543209876543
+Class: GANG,Pos Pred Value,0.9
+Class: GLYC,Pos Pred Value,1
+Class: GUAN,Pos Pred Value,0.7499999999999999
+Class: METAL,Pos Pred Value,1
+Class: OTGAL,Pos Pred Value,0.5000000000000001
+Class: PROST,Pos Pred Value,1
+Class: STER,Pos Pred Value,0.8571428571428567
+Class: GANG,Neg Pred Value,0.942857142857143
+Class: GLYC,Neg Pred Value,0.888888888888889
+Class: GUAN,Neg Pred Value,0.9390243902439024
+Class: METAL,Neg Pred Value,0.9550561797752809
+Class: OTGAL,Neg Pred Value,0.9782608695652175
+Class: PROST,Neg Pred Value,0.9887640449438203
+Class: STER,Neg Pred Value,0.963855421686747
+Class: GANG,Precision,0.9
+Class: GLYC,Precision,1
+Class: GUAN,Precision,0.75
+Class: METAL,Precision,1
+Class: OTGAL,Precision,0.5
+Class: PROST,Precision,1
+Class: STER,Precision,0.8571428571428571
+Class: GANG,Recall,0.8181818181818182
+Class: GLYC,Recall,0.5
+Class: GUAN,Recall,0.5454545454545454
+Class: METAL,Recall,0.2
+Class: OTGAL,Recall,0.9565217391304348
+Class: PROST,Recall,0.5
+Class: STER,Recall,0.6666666666666666
+Class: GANG,F1,0.8571428571428572
+Class: GLYC,F1,0.6666666666666666
+Class: GUAN,F1,0.631578947368421
+Class: METAL,F1,0.33333333333333337
+Class: OTGAL,F1,0.6567164179104478
+Class: PROST,F1,0.6666666666666666
+Class: STER,F1,0.75
+Class: GANG,Prevalence,0.24444444444444444
+Class: GLYC,Prevalence,0.2
+Class: GUAN,Prevalence,0.12222222222222222
+Class: METAL,Prevalence,0.05555555555555555
+Class: OTGAL,Prevalence,0.25555555555555554
+Class: PROST,Prevalence,0.022222222222222223
+Class: STER,Prevalence,0.1
+Class: GANG,Detection Rate,0.2
+Class: GLYC,Detection Rate,0.1
+Class: GUAN,Detection Rate,0.06666666666666667
+Class: METAL,Detection Rate,0.011111111111111112
+Class: OTGAL,Detection Rate,0.24444444444444444
+Class: PROST,Detection Rate,0.011111111111111112
+Class: STER,Detection Rate,0.06666666666666667
+Class: GANG,Detection Prevalence,0.2222222222222222
+Class: GLYC,Detection Prevalence,0.1
+Class: GUAN,Detection Prevalence,0.08888888888888889
+Class: METAL,Detection Prevalence,0.011111111111111112
+Class: OTGAL,Detection Prevalence,0.4888888888888889
+Class: PROST,Detection Prevalence,0.011111111111111112
+Class: STER,Detection Prevalence,0.07777777777777778
+Class: GANG,Balanced Accuracy,0.8943850267379679
+Class: GLYC,Balanced Accuracy,0.75
+Class: GUAN,Balanced Accuracy,0.7600690448791714
+Class: METAL,Balanced Accuracy,0.6
+Class: OTGAL,Balanced Accuracy,0.8140817650876055
+Class: PROST,Balanced Accuracy,0.75
+Class: STER,Balanced Accuracy,0.8271604938271604

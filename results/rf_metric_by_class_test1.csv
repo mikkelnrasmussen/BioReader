@@ -1,0 +1,67 @@
+Var1,Var2,Freq
+Class: Allergen,Sensitivity,0.7284427284427284
+Class: Autoimm,Sensitivity,0.790150842945874
+Class: Cancer,Sensitivity,0.8851936218678815
+Class: Infectious_Disease,Sensitivity,0.9079162875341219
+Class: Other,Sensitivity,0.7825150732127476
+Class: Transplant,Sensitivity,0.25513196480938416
+Class: Allergen,Specificity,0.9978583326723249
+Class: Autoimm,Specificity,0.962084456424079
+Class: Cancer,Specificity,0.976405398158906
+Class: Infectious_Disease,Specificity,0.9192546583850931
+Class: Other,Specificity,0.9236123666606401
+Class: Transplant,Specificity,0.9995399831327149
+Class: Allergen,Pos Pred Value,0.9544688026981457
+Class: Autoimm,Pos Pred Value,0.8084430322287788
+Class: Cancer,Pos Pred Value,0.8803806071590392
+Class: Infectious_Disease,Pos Pred Value,0.886775684322787
+Class: Other,Pos Pred Value,0.6825694966190835
+Class: Transplant,Pos Pred Value,0.9354838709677411
+Class: Allergen,Neg Pred Value,0.9835040262684701
+Class: Autoimm,Neg Pred Value,0.957696091583937
+Class: Cancer,Neg Pred Value,0.9774536995615997
+Class: Infectious_Disease,Neg Pred Value,0.9347770043825728
+Class: Other,Neg Pred Value,0.9529005782503264
+Class: Transplant,Neg Pred Value,0.9808893236024376
+Class: Allergen,Precision,0.954468802698145
+Class: Autoimm,Precision,0.8084430322287789
+Class: Cancer,Precision,0.8803806071590394
+Class: Infectious_Disease,Precision,0.8867756843227871
+Class: Other,Precision,0.6825694966190834
+Class: Transplant,Precision,0.9354838709677419
+Class: Allergen,Recall,0.7284427284427284
+Class: Autoimm,Recall,0.790150842945874
+Class: Cancer,Recall,0.8851936218678815
+Class: Infectious_Disease,Recall,0.9079162875341219
+Class: Other,Recall,0.7825150732127476
+Class: Transplant,Recall,0.25513196480938416
+Class: Allergen,F1,0.8262773722627736
+Class: Autoimm,F1,0.7991922818039039
+Class: Cancer,F1,0.8827805542935029
+Class: Infectious_Disease,F1,0.8972214728891287
+Class: Other,F1,0.7291332263242375
+Class: Transplant,F1,0.40092165898617516
+Class: Allergen,Prevalence,0.05805439330543933
+Class: Autoimm,Prevalence,0.1684100418410042
+Class: Cancer,Prevalence,0.1640017931858936
+Class: Infectious_Disease,Prevalence,0.41056485355648537
+Class: Other,Prevalence,0.17349073520621638
+Class: Transplant,Prevalence,0.025478182904961146
+Class: Allergen,Detection Rate,0.04228930065750149
+Class: Autoimm,Detection Rate,0.13306933652121936
+Class: Cancer,Detection Rate,0.1451733413030484
+Class: Infectious_Disease,Detection Rate,0.3727585176329946
+Class: Other,Detection Rate,0.13575911536162583
+Class: Transplant,Detection Rate,0.006500298864315601
+Class: Allergen,Detection Prevalence,0.04430663478780634
+Class: Autoimm,Detection Prevalence,0.16459952181709503
+Class: Cancer,Detection Prevalence,0.16489838613269575
+Class: Infectious_Disease,Detection Prevalence,0.42035265989240883
+Class: Other,Detection Prevalence,0.19889420203227734
+Class: Transplant,Detection Prevalence,0.006948595337716677
+Class: Allergen,Balanced Accuracy,0.8631505305575267
+Class: Autoimm,Balanced Accuracy,0.8761176496849765
+Class: Cancer,Balanced Accuracy,0.9307995100133938
+Class: Infectious_Disease,Balanced Accuracy,0.9135854729596076
+Class: Other,Balanced Accuracy,0.8530637199366938
+Class: Transplant,Balanced Accuracy,0.6273359739710496

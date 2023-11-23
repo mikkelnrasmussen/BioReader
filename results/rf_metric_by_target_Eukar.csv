@@ -1,0 +1,45 @@
+Var1,Var2,Freq
+Class: FUNG,Sensitivity,0.4
+Class: INVER,Sensitivity,0.9
+Class: VENOM,Sensitivity,1
+Class: VERT,Sensitivity,0.9354838709677419
+Class: FUNG,Specificity,1
+Class: INVER,Specificity,0.9425287356321839
+Class: VENOM,Specificity,0.9931972789115646
+Class: VERT,Specificity,0.8526315789473684
+Class: FUNG,Pos Pred Value,1
+Class: INVER,Pos Pred Value,0.9264705882352942
+Class: VENOM,Pos Pred Value,0.909090909090909
+Class: VERT,Pos Pred Value,0.8055555555555555
+Class: FUNG,Neg Pred Value,0.9403973509933775
+Class: INVER,Neg Pred Value,0.9213483146067416
+Class: VENOM,Neg Pred Value,1
+Class: VERT,Neg Pred Value,0.9529411764705883
+Class: FUNG,Precision,1
+Class: INVER,Precision,0.9264705882352942
+Class: VENOM,Precision,0.9090909090909091
+Class: VERT,Precision,0.8055555555555556
+Class: FUNG,Recall,0.4
+Class: INVER,Recall,0.9
+Class: VENOM,Recall,1
+Class: VERT,Recall,0.9354838709677419
+Class: FUNG,F1,0.5714285714285715
+Class: INVER,F1,0.9130434782608695
+Class: VENOM,F1,0.9523809523809523
+Class: VERT,F1,0.8656716417910448
+Class: FUNG,Prevalence,0.09554140127388536
+Class: INVER,Prevalence,0.445859872611465
+Class: VENOM,Prevalence,0.06369426751592357
+Class: VERT,Prevalence,0.39490445859872614
+Class: FUNG,Detection Rate,0.03821656050955414
+Class: INVER,Detection Rate,0.4012738853503185
+Class: VENOM,Detection Rate,0.06369426751592357
+Class: VERT,Detection Rate,0.36942675159235666
+Class: FUNG,Detection Prevalence,0.03821656050955414
+Class: INVER,Detection Prevalence,0.43312101910828027
+Class: VENOM,Detection Prevalence,0.07006369426751592
+Class: VERT,Detection Prevalence,0.4585987261146497
+Class: FUNG,Balanced Accuracy,0.7
+Class: INVER,Balanced Accuracy,0.9212643678160919
+Class: VENOM,Balanced Accuracy,0.9965986394557823
+Class: VERT,Balanced Accuracy,0.8940577249575552

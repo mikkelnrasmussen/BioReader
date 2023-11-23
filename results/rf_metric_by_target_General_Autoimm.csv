@@ -1,0 +1,111 @@
+Var1,Var2,Freq
+Class: CONTRA,Sensitivity,0.7346938775510204
+Class: EAM,Sensitivity,0.42105263157894735
+Class: HAEM,Sensitivity,0.8793103448275862
+Class: IFN,Sensitivity,0.45454545454545453
+Class: IRBP,Sensitivity,0.9272727272727272
+Class: LIV,Sensitivity,0.8484848484848485
+Class: OTGA,Sensitivity,0.9598393574297188
+Class: PDT,Sensitivity,0
+Class: PEMP,Sensitivity,0.96
+Class: TYR,Sensitivity,1
+Class: CONTRA,Specificity,0.9973509933774835
+Class: EAM,Specificity,0.9974522292993631
+Class: HAEM,Specificity,0.9959785522788204
+Class: IFN,Specificity,1
+Class: IRBP,Specificity,0.9933244325767691
+Class: LIV,Specificity,0.9922178988326849
+Class: OTGA,Specificity,0.8202614379084967
+Class: PDT,Specificity,1
+Class: PEMP,Specificity,0.9987163029525032
+Class: TYR,Specificity,0.9973579920739762
+Class: CONTRA,Pos Pred Value,0.9473684210526319
+Class: EAM,Pos Pred Value,0.8
+Class: HAEM,Pos Pred Value,0.9444444444444445
+Class: IFN,Pos Pred Value,1
+Class: IRBP,Pos Pred Value,0.910714285714286
+Class: LIV,Pos Pred Value,0.8235294117647064
+Class: OTGA,Pos Pred Value,0.8968105065666041
+Class: PDT,Pos Pred Value,NA
+Class: PEMP,Pos Pred Value,0.9600000000000011
+Class: TYR,Pos Pred Value,0.959183673469388
+Class: CONTRA,Neg Pred Value,0.9830287206266319
+Class: EAM,Neg Pred Value,0.9861460957178841
+Class: HAEM,Neg Pred Value,0.9906666666666666
+Class: IFN,Neg Pred Value,0.9924906132665832
+Class: IRBP,Neg Pred Value,0.9946524064171123
+Class: LIV,Neg Pred Value,0.9935064935064936
+Class: OTGA,Neg Pred Value,0.9261992619926198
+Class: PDT,Neg Pred Value,0.9888059701492538
+Class: PEMP,Neg Pred Value,0.9987163029525031
+Class: TYR,Neg Pred Value,1
+Class: CONTRA,Precision,0.9473684210526315
+Class: EAM,Precision,0.8
+Class: HAEM,Precision,0.9444444444444444
+Class: IFN,Precision,1
+Class: IRBP,Precision,0.9107142857142857
+Class: LIV,Precision,0.8235294117647058
+Class: OTGA,Precision,0.8968105065666041
+Class: PDT,Precision,NA
+Class: PEMP,Precision,0.96
+Class: TYR,Precision,0.9591836734693877
+Class: CONTRA,Recall,0.7346938775510204
+Class: EAM,Recall,0.42105263157894735
+Class: HAEM,Recall,0.8793103448275862
+Class: IFN,Recall,0.45454545454545453
+Class: IRBP,Recall,0.9272727272727272
+Class: LIV,Recall,0.8484848484848485
+Class: OTGA,Recall,0.9598393574297188
+Class: PDT,Recall,0
+Class: PEMP,Recall,0.96
+Class: TYR,Recall,1
+Class: CONTRA,F1,0.8275862068965517
+Class: EAM,F1,0.5517241379310345
+Class: HAEM,F1,0.9107142857142858
+Class: IFN,F1,0.625
+Class: IRBP,F1,0.918918918918919
+Class: LIV,F1,0.8358208955223881
+Class: OTGA,F1,0.92725509214355
+Class: PDT,F1,NA
+Class: PEMP,F1,0.96
+Class: TYR,F1,0.9791666666666666
+Class: CONTRA,Prevalence,0.060945273631840796
+Class: EAM,Prevalence,0.0236318407960199
+Class: HAEM,Prevalence,0.07213930348258707
+Class: IFN,Prevalence,0.013681592039800995
+Class: IRBP,Prevalence,0.06840796019900497
+Class: LIV,Prevalence,0.041044776119402986
+Class: OTGA,Prevalence,0.6194029850746269
+Class: PDT,Prevalence,0.011194029850746268
+Class: PEMP,Prevalence,0.03109452736318408
+Class: TYR,Prevalence,0.05845771144278607
+Class: CONTRA,Detection Rate,0.04477611940298507
+Class: EAM,Detection Rate,0.009950248756218905
+Class: HAEM,Detection Rate,0.06343283582089553
+Class: IFN,Detection Rate,0.006218905472636816
+Class: IRBP,Detection Rate,0.06343283582089553
+Class: LIV,Detection Rate,0.03482587064676617
+Class: OTGA,Detection Rate,0.5945273631840796
+Class: PDT,Detection Rate,0
+Class: PEMP,Detection Rate,0.029850746268656716
+Class: TYR,Detection Rate,0.05845771144278607
+Class: CONTRA,Detection Prevalence,0.0472636815920398
+Class: EAM,Detection Prevalence,0.012437810945273632
+Class: HAEM,Detection Prevalence,0.06716417910447761
+Class: IFN,Detection Prevalence,0.006218905472636816
+Class: IRBP,Detection Prevalence,0.06965174129353234
+Class: LIV,Detection Prevalence,0.04228855721393035
+Class: OTGA,Detection Prevalence,0.6629353233830846
+Class: PDT,Detection Prevalence,0
+Class: PEMP,Detection Prevalence,0.03109452736318408
+Class: TYR,Detection Prevalence,0.060945273631840796
+Class: CONTRA,Balanced Accuracy,0.866022435464252
+Class: EAM,Balanced Accuracy,0.7092524304391552
+Class: HAEM,Balanced Accuracy,0.9376444485532033
+Class: IFN,Balanced Accuracy,0.7272727272727273
+Class: IRBP,Balanced Accuracy,0.9602985799247481
+Class: LIV,Balanced Accuracy,0.9203513736587667
+Class: OTGA,Balanced Accuracy,0.8900503976691078
+Class: PDT,Balanced Accuracy,0.5
+Class: PEMP,Balanced Accuracy,0.9793581514762516
+Class: TYR,Balanced Accuracy,0.9986789960369882

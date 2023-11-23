@@ -1,0 +1,45 @@
+Var1,Var2,Freq
+Class: DNP,Sensitivity,0.8823529411764706
+Class: MET,Sensitivity,0.6666666666666666
+Class: OTAL,Sensitivity,0.43137254901960786
+Class: OTAP,Sensitivity,0.8167539267015707
+Class: DNP,Specificity,0.8517110266159695
+Class: MET,Specificity,1
+Class: OTAL,Specificity,1
+Class: OTAP,Specificity,0.7777777777777778
+Class: DNP,Pos Pred Value,0.7758620689655171
+Class: MET,Pos Pred Value,1
+Class: OTAL,Pos Pred Value,1
+Class: OTAP,Pos Pred Value,0.7572815533980582
+Class: DNP,Neg Pred Value,0.9256198347107438
+Class: MET,Neg Pred Value,0.9825870646766168
+Class: OTAL,Neg Pred Value,0.9263959390862945
+Class: OTAP,Neg Pred Value,0.8333333333333334
+Class: DNP,Precision,0.7758620689655172
+Class: MET,Precision,1
+Class: OTAL,Precision,1
+Class: OTAP,Precision,0.7572815533980582
+Class: DNP,Recall,0.8823529411764706
+Class: MET,Recall,0.6666666666666666
+Class: OTAL,Recall,0.43137254901960786
+Class: OTAP,Recall,0.8167539267015707
+Class: DNP,F1,0.8256880733944953
+Class: MET,F1,0.8
+Class: OTAL,F1,0.6027397260273972
+Class: OTAP,F1,0.7858942065491185
+Class: DNP,Prevalence,0.36778846153846156
+Class: MET,Prevalence,0.05048076923076923
+Class: OTAL,Prevalence,0.12259615384615384
+Class: OTAP,Prevalence,0.45913461538461536
+Class: DNP,Detection Rate,0.3245192307692308
+Class: MET,Detection Rate,0.03365384615384615
+Class: OTAL,Detection Rate,0.052884615384615384
+Class: OTAP,Detection Rate,0.375
+Class: DNP,Detection Prevalence,0.4182692307692308
+Class: MET,Detection Prevalence,0.03365384615384615
+Class: OTAL,Detection Prevalence,0.052884615384615384
+Class: OTAP,Detection Prevalence,0.4951923076923077
+Class: DNP,Balanced Accuracy,0.86703198389622
+Class: MET,Balanced Accuracy,0.8333333333333333
+Class: OTAL,Balanced Accuracy,0.7156862745098039
+Class: OTAP,Balanced Accuracy,0.7972658522396743

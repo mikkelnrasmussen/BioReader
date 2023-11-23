@@ -1,0 +1,34 @@
+Var1,Var2,Freq
+Class: Eukar,Sensitivity,0.8012820512820513
+Class: other,Sensitivity,0.9542168674698795
+Class: plants,Sensitivity,0.8969957081545065
+Class: Eukar,Specificity,0.9737654320987654
+Class: other,Specificity,0.897172236503856
+Class: plants,Specificity,0.9702276707530648
+Class: Eukar,Pos Pred Value,0.880281690140845
+Class: other,Pos Pred Value,0.908256880733945
+Class: plants,Pos Pred Value,0.9247787610619469
+Class: Eukar,Neg Pred Value,0.9531722054380665
+Class: other,Neg Pred Value,0.9483695652173914
+Class: plants,Neg Pred Value,0.9584775086505191
+Class: Eukar,Precision,0.8802816901408451
+Class: other,Precision,0.908256880733945
+Class: plants,Precision,0.9247787610619469
+Class: Eukar,Recall,0.8012820512820513
+Class: other,Recall,0.9542168674698795
+Class: plants,Recall,0.8969957081545065
+Class: Eukar,F1,0.8389261744966443
+Class: other,F1,0.9306698002350177
+Class: plants,F1,0.9106753812636167
+Class: Eukar,Prevalence,0.19402985074626866
+Class: other,Prevalence,0.5161691542288557
+Class: plants,Prevalence,0.2898009950248756
+Class: Eukar,Detection Rate,0.15547263681592038
+Class: other,Detection Rate,0.4925373134328358
+Class: plants,Detection Rate,0.2599502487562189
+Class: Eukar,Detection Prevalence,0.17661691542288557
+Class: other,Detection Prevalence,0.5422885572139303
+Class: plants,Detection Prevalence,0.2810945273631841
+Class: Eukar,Balanced Accuracy,0.8875237416904084
+Class: other,Balanced Accuracy,0.9256945519868678
+Class: plants,Balanced Accuracy,0.9336116894537856
