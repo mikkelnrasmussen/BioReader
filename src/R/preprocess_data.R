@@ -70,6 +70,17 @@ df_class_label <- df_class_label |>
       category
     )
   )
+
+# Rename "Other" categories
+df_class_label <- df_class_label |>
+  mutate(
+    category = if_else(
+      tolower(category) == "other",
+      str_c(category, "_", class),
+      category
+    )
+  )
+
 write_csv(df_class_label, "data/class_info.csv")
 
 
