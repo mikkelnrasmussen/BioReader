@@ -1,34 +1,34 @@
 Var1,Var2,Freq
 Class: Eukar,Sensitivity,0.8012820512820513
-Class: other,Sensitivity,0.9614457831325302
-Class: plants,Sensitivity,0.8927038626609443
+Class: Other_Allergen,Sensitivity,0.9614457831325302
+Class: Plants,Sensitivity,0.8927038626609443
 Class: Eukar,Specificity,0.9753086419753086
-Class: other,Specificity,0.8946015424164524
-Class: plants,Specificity,0.9737302977232924
+Class: Other_Allergen,Specificity,0.8946015424164524
+Class: Plants,Specificity,0.9737302977232924
 Class: Eukar,Pos Pred Value,0.8865248226950355
-Class: other,Pos Pred Value,0.9068181818181817
-Class: plants,Pos Pred Value,0.9327354260089686
+Class: Other_Allergen,Pos Pred Value,0.9068181818181817
+Class: Plants,Pos Pred Value,0.9327354260089686
 Class: Eukar,Neg Pred Value,0.9532428355957767
-Class: other,Neg Pred Value,0.9560439560439561
-Class: plants,Neg Pred Value,0.9569707401032702
+Class: Other_Allergen,Neg Pred Value,0.9560439560439561
+Class: Plants,Neg Pred Value,0.9569707401032702
 Class: Eukar,Precision,0.8865248226950354
-Class: other,Precision,0.9068181818181819
-Class: plants,Precision,0.9327354260089686
+Class: Other_Allergen,Precision,0.9068181818181819
+Class: Plants,Precision,0.9327354260089686
 Class: Eukar,Recall,0.8012820512820513
-Class: other,Recall,0.9614457831325302
-Class: plants,Recall,0.8927038626609443
+Class: Other_Allergen,Recall,0.9614457831325302
+Class: Plants,Recall,0.8927038626609443
 Class: Eukar,F1,0.8417508417508417
-Class: other,F1,0.9333333333333333
-Class: plants,F1,0.912280701754386
+Class: Other_Allergen,F1,0.9333333333333333
+Class: Plants,F1,0.912280701754386
 Class: Eukar,Prevalence,0.19402985074626866
-Class: other,Prevalence,0.5161691542288557
-Class: plants,Prevalence,0.2898009950248756
+Class: Other_Allergen,Prevalence,0.5161691542288557
+Class: Plants,Prevalence,0.2898009950248756
 Class: Eukar,Detection Rate,0.15547263681592038
-Class: other,Detection Rate,0.4962686567164179
-Class: plants,Detection Rate,0.25870646766169153
+Class: Other_Allergen,Detection Rate,0.4962686567164179
+Class: Plants,Detection Rate,0.25870646766169153
 Class: Eukar,Detection Prevalence,0.17537313432835822
-Class: other,Detection Prevalence,0.5472636815920398
-Class: plants,Detection Prevalence,0.277363184079602
+Class: Other_Allergen,Detection Prevalence,0.5472636815920398
+Class: Plants,Detection Prevalence,0.277363184079602
 Class: Eukar,Balanced Accuracy,0.88829534662868
-Class: other,Balanced Accuracy,0.9280236627744913
-Class: plants,Balanced Accuracy,0.9332170801921184
+Class: Other_Allergen,Balanced Accuracy,0.9280236627744913
+Class: Plants,Balanced Accuracy,0.9332170801921184
