@@ -1,0 +1,47 @@
+- One or more packages recorded in the lockfile are not installed.
+- Use `renv::status()` for more details.
+Target: Allergen
+Test: FALSE
+HPC: TRUE
+Parallel: TRUE
+Output directory: results/
+Appending: 
+Seed: 123
+Upsample: FALSE
+Local Classifier per Node (LCN): 
+    pmid abstract   target 
+       0        0        0 
+# A tibble: 3 × 2
+  target     n
+  <fct>  <int>
+1 Eukar    780
+2 other   2075
+3 plants  1164
+══ Workflow ════════════════════════════════════════════════════════════════════
+Preprocessor: Recipe
+Model: rand_forest()
+
+── Preprocessor ────────────────────────────────────────────────────────────────
+5 Recipe Steps
+
+• step_tokenize()
+• step_stopwords()
+• step_stem()
+• step_tokenfilter()
+• step_tfidf()
+
+── Model ───────────────────────────────────────────────────────────────────────
+Random Forest Model Specification (classification)
+
+Main Arguments:
+  mtry = tune()
+  trees = tune()
+  min_n = tune()
+
+Engine-Specific Arguments:
+  importance = impurity
+
+Computational engine: ranger 
+
+Number of cores: 10
+[1] "2023-11-24 00:12:50 CET"
