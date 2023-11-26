@@ -96,7 +96,7 @@ submit <- function(command, runtime, cores, ram, directory = "", modules = "",
 df_class_label <- read_csv("data/class_info.csv")
 
 # for (target in unique(df_class_label$category)) {
-for (target in c("Allergen", "Other", "Other_Other")) {
+for (target in c("Plants", "Other_Allergen")) {
   command <- paste(
     "/usr/bin/time -v -o time/bioreader.time Rscript src/R/main_PRIAT.R -a",
     target,
