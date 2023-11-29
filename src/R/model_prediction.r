@@ -86,7 +86,7 @@ category_predict <- function(model_dir, new_data) {
   new_data$level_1 <- predict(model_level_1, new_data)$.pred_class
 
   # Classify articles according to level 2 models
-  print("R: Classifying articles according to level 2 models...")
+  cat("R: Classifying articles according to level 2 models...")
 
   # Add placeholder for level 2 classification
   new_data$level_2 <- NA
@@ -100,12 +100,17 @@ category_predict <- function(model_dir, new_data) {
   for (i in seq_len(nrow(new_data))) {
     level_1_category <- new_data[i, "level_1"] |> pull(level_1)
     if (level_1_category %in% classes) {
-      new_data[i, "level_2"] <- load_and_predict(model_dir, level_1_category, new_data[i, ])
+      # If level 1 class is the same as level 2 class, assign level 1 class to level 2 class
+      if (level_1_category %in% c("Cancer", "HIV", "Transplant")) {
+        new_data[i, "level_2"] <- level_1_category
+      } else {
+        new_data[i, "level_2"] <- load_and_predict(model_dir, level_1_category, new_data[i, ])
+      }
     }
   }
 
   # Classify articles according to level 3 models
-  print("R: Classifying articles according to level 3 models...")
+  cat("R: Classifying articles according to level 3 models...")
 
   # Add placeholder for level 3 classification
   new_data$level_3 <- NA
@@ -135,7 +140,8 @@ classify_data <- function(data_path, model_dir, output_dir) {
   cat("R: Load the articles...", fill = TRUE)
   new_data <- read_csv(data_path) |>
     rename(pmid = PubMed_ID, abstract = Abstract) |>
-    select(pmid, abstract)
+    select(pmid, abstract) |>
+    slice(1:10)
 
   # Perform prediction
   cat("R: Classifying the articles...", fill = TRUE)
@@ -152,10 +158,11 @@ classify_data <- function(data_path, model_dir, output_dir) {
   return(pred)
 }
 
-opt$input <- "data/_raw/training_data/ABS.csv"
+opt$input <- "data/_raw/training_data/LEU.csv"
 
 res <- classify_data(
   data_path = opt$input,
   model_dir = opt$model_dir,
   output_dir = opt$output
 )
+View(class_info)
