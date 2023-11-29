@@ -1,0 +1,111 @@
+Var1,Var2,Freq
+Class: BLOOD,Sensitivity,0.7941176470588235
+Class: GAL,Sensitivity,0.9
+Class: GVH,Sensitivity,0.2222222222222222
+Class: HY,Sensitivity,0.6470588235294118
+Class: MHC,Sensitivity,0.7710843373493976
+Class: MINOR,Sensitivity,0.8636363636363636
+Class: OTTRAN,Sensitivity,0
+Class: PEP,Sensitivity,0.8305084745762712
+Class: THRO,Sensitivity,0.5
+Class: XENO,Sensitivity,0
+Class: BLOOD,Specificity,0.9725609756097561
+Class: GAL,Specificity,0.9006849315068494
+Class: GVH,Specificity,0.9883720930232558
+Class: HY,Specificity,0.9942028985507246
+Class: MHC,Specificity,0.899641577060932
+Class: MINOR,Specificity,0.9823529411764705
+Class: OTTRAN,Specificity,1
+Class: PEP,Specificity,0.8613861386138614
+Class: THRO,Specificity,0.9943820224719101
+Class: XENO,Specificity,1
+Class: BLOOD,Pos Pred Value,0.7499999999999998
+Class: GAL,Pos Pred Value,0.6847826086956523
+Class: GVH,Pos Pred Value,0.49999999999999956
+Class: HY,Pos Pred Value,0.846153846153846
+Class: MHC,Pos Pred Value,0.6956521739130437
+Class: MINOR,Pos Pred Value,0.7599999999999995
+Class: OTTRAN,Pos Pred Value,NA
+Class: PEP,Pos Pred Value,0.5384615384615384
+Class: THRO,Pos Pred Value,0.5999999999999994
+Class: XENO,Pos Pred Value,NA
+Class: BLOOD,Neg Pred Value,0.9785276073619632
+Class: GAL,Neg Pred Value,0.9740740740740741
+Class: GVH,Neg Pred Value,0.96045197740113
+Class: HY,Neg Pred Value,0.9828080229226361
+Class: MHC,Neg Pred Value,0.9296296296296296
+Class: MINOR,Neg Pred Value,0.9910979228486646
+Class: OTTRAN,Neg Pred Value,0.9392265193370166
+Class: PEP,Neg Pred Value,0.9630996309963099
+Class: THRO,Neg Pred Value,0.9915966386554621
+Class: XENO,Neg Pred Value,0.9143646408839778
+Class: BLOOD,Precision,0.75
+Class: GAL,Precision,0.6847826086956522
+Class: GVH,Precision,0.5
+Class: HY,Precision,0.8461538461538461
+Class: MHC,Precision,0.6956521739130435
+Class: MINOR,Precision,0.76
+Class: OTTRAN,Precision,NA
+Class: PEP,Precision,0.5384615384615384
+Class: THRO,Precision,0.6
+Class: XENO,Precision,NA
+Class: BLOOD,Recall,0.7941176470588235
+Class: GAL,Recall,0.9
+Class: GVH,Recall,0.2222222222222222
+Class: HY,Recall,0.6470588235294118
+Class: MHC,Recall,0.7710843373493976
+Class: MINOR,Recall,0.8636363636363636
+Class: OTTRAN,Recall,0
+Class: PEP,Recall,0.8305084745762712
+Class: THRO,Recall,0.5
+Class: XENO,Recall,0
+Class: BLOOD,F1,0.7714285714285715
+Class: GAL,F1,0.7777777777777778
+Class: GVH,F1,0.30769230769230765
+Class: HY,F1,0.7333333333333334
+Class: MHC,F1,0.7314285714285714
+Class: MINOR,F1,0.8085106382978724
+Class: OTTRAN,F1,NA
+Class: PEP,F1,0.6533333333333333
+Class: THRO,F1,0.5454545454545454
+Class: XENO,F1,NA
+Class: BLOOD,Prevalence,0.09392265193370165
+Class: GAL,Prevalence,0.19337016574585636
+Class: GVH,Prevalence,0.049723756906077346
+Class: HY,Prevalence,0.04696132596685083
+Class: MHC,Prevalence,0.2292817679558011
+Class: MINOR,Prevalence,0.06077348066298342
+Class: OTTRAN,Prevalence,0.06077348066298342
+Class: PEP,Prevalence,0.16298342541436464
+Class: THRO,Prevalence,0.016574585635359115
+Class: XENO,Prevalence,0.0856353591160221
+Class: BLOOD,Detection Rate,0.07458563535911603
+Class: GAL,Detection Rate,0.17403314917127072
+Class: GVH,Detection Rate,0.011049723756906077
+Class: HY,Detection Rate,0.03038674033149171
+Class: MHC,Detection Rate,0.17679558011049723
+Class: MINOR,Detection Rate,0.052486187845303865
+Class: OTTRAN,Detection Rate,0
+Class: PEP,Detection Rate,0.13535911602209943
+Class: THRO,Detection Rate,0.008287292817679558
+Class: XENO,Detection Rate,0
+Class: BLOOD,Detection Prevalence,0.09944751381215469
+Class: GAL,Detection Prevalence,0.2541436464088398
+Class: GVH,Detection Prevalence,0.022099447513812154
+Class: HY,Detection Prevalence,0.03591160220994475
+Class: MHC,Detection Prevalence,0.2541436464088398
+Class: MINOR,Detection Prevalence,0.06906077348066299
+Class: OTTRAN,Detection Prevalence,0
+Class: PEP,Detection Prevalence,0.2513812154696133
+Class: THRO,Detection Prevalence,0.013812154696132596
+Class: XENO,Detection Prevalence,0
+Class: BLOOD,Balanced Accuracy,0.8833393113342898
+Class: GAL,Balanced Accuracy,0.9003424657534247
+Class: GVH,Balanced Accuracy,0.6052971576227391
+Class: HY,Balanced Accuracy,0.8206308610400682
+Class: MHC,Balanced Accuracy,0.8353629572051648
+Class: MINOR,Balanced Accuracy,0.9229946524064171
+Class: OTTRAN,Balanced Accuracy,0.5
+Class: PEP,Balanced Accuracy,0.8459473065950662
+Class: THRO,Balanced Accuracy,0.747191011235955
+Class: XENO,Balanced Accuracy,0.5
