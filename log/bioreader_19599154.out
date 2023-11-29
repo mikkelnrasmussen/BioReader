@@ -1,0 +1,56 @@
+- One or more packages recorded in the lockfile are not installed.
+- Use `renv::status()` for more details.
+Target: Transplant
+Test: FALSE
+HPC: TRUE
+Parallel: TRUE
+Output directory: results/
+Appending: 
+Seed: 123
+Upsample: FALSE
+Local Classifier per Node (LCN): 
+Skip level 2: TRUE
+    pmid abstract   target 
+       0        0        0 
+# A tibble: 10 × 2
+   target     n
+   <fct>  <int>
+ 1 BLOOD    161
+ 2 GAL      329
+ 3 GVH      107
+ 4 HY        76
+ 5 MHC      426
+ 6 MINOR    146
+ 7 OTTRAN   108
+ 8 PEP      295
+ 9 THRO      31
+10 XENO     126
+══ Workflow ════════════════════════════════════════════════════════════════════
+Preprocessor: Recipe
+Model: rand_forest()
+
+── Preprocessor ────────────────────────────────────────────────────────────────
+5 Recipe Steps
+
+• step_tokenize()
+• step_stopwords()
+• step_stem()
+• step_tokenfilter()
+• step_tfidf()
+
+── Model ───────────────────────────────────────────────────────────────────────
+Random Forest Model Specification (classification)
+
+Main Arguments:
+  mtry = tune()
+  trees = tune()
+  min_n = tune()
+
+Engine-Specific Arguments:
+  importance = impurity
+
+Computational engine: ranger 
+
+Number of cores: 10
+[1] "2023-11-29 08:45:54 CET"
+Time difference of 1.929241 hours
