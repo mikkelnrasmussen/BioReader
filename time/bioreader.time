@@ -1,24 +1,24 @@
-	Command being timed: "Rscript src/R/main_PRIAT.R -a Other -p --hpc"
-	User time (seconds): 532525.09
-	System time (seconds): 14102.53
-	Percent of CPU this job got: 634%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 23:54:51
+Command exited with non-zero status 1
+	Command being timed: "Rscript src/R/main_PRIAT.R -a Cancer -p --hpc"
+	User time (seconds): 9.55
+	System time (seconds): 1.81
+	Percent of CPU this job got: 31%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:36.34
 	Average shared text size (kbytes): 0
 	Average unshared data size (kbytes): 0
 	Average stack size (kbytes): 0
 	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 5297608
+	Maximum resident set size (kbytes): 662220
 	Average resident set size (kbytes): 0
-	Major (requiring I/O) page faults: 29380
-	Minor (reclaiming a frame) page faults: 2027791536
-	Voluntary context switches: 540997756
-	Involuntary context switches: 40155426
+	Major (requiring I/O) page faults: 29336
+	Minor (reclaiming a frame) page faults: 491226
+	Voluntary context switches: 66165
+	Involuntary context switches: 29832
 	Swaps: 0
-	File system inputs: 87176
-	File system outputs: 1670104
+	File system inputs: 208673
+	File system outputs: 41
 	Socket messages sent: 0
 	Socket messages received: 0
 	Signals delivered: 0
 	Page size (bytes): 4096
-	Exit status: 0
-Exit status: 1
+	Exit status: 1
