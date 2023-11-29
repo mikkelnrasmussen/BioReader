@@ -67,6 +67,12 @@ option_list <- list(
     type = "character",
     default = NULL,
     help = "The node for which a Local Classifier per Node (LCN) classfier will be trained. When values is NULL a Local Classifier per Parent Node (LCPN) will be trained [default: %default]"
+  ),
+  make_option(
+    c("-k", "--skip_level_2"),
+    action = "store_true",
+    default = FALSE,
+    help = "Whether to skip training of level 2 classifier [default: %default]"
   )
 )
 
@@ -83,6 +89,7 @@ cat(paste("Appending:", opt$append), fill = TRUE)
 cat(paste("Seed:", opt$seed), fill = TRUE)
 cat(paste("Upsample:", opt$upsample), fill = TRUE)
 cat(paste("Local Classifier per Node (LCN):", opt$lcn), fill = TRUE)
+cat(paste("Skip level 2:", opt$skip_level_2), fill = TRUE)
 
 ###################################################################
 ######################### Load Data ###############################
@@ -115,7 +122,7 @@ if (!is.null(opt$lcn)) {
           "Negative"
         )
       )
-  } else if (opt$target %in% unique(df_class_label$class)) {
+  } else if (!opt$skip_level_2 & opt$target %in% unique(df_class_label$class)) {
     # Create dataframe with all the selected cateogory
     df_main <- df_merged |>
       filter(class == opt$target) |>
@@ -158,7 +165,7 @@ if (!is.null(opt$lcn)) {
     # Create dataframe with all the selected class
     df_main <- df_merged |>
       select(PubMed_ID, Abstract, opt$target)
-  } else if (opt$target %in% unique(df_class_label$class)) {
+  } else if (!opt$skip_level_2 & opt$target %in% unique(df_class_label$class)) {
     # Create dataframe with all the selected cateogory
     df_main <- df_merged |>
       filter(class == opt$target) |>
