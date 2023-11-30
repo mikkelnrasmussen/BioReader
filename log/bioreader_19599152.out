@@ -1,0 +1,56 @@
+- One or more packages recorded in the lockfile are not installed.
+- Use `renv::status()` for more details.
+Target: Cancer
+Test: FALSE
+HPC: TRUE
+Parallel: TRUE
+Output directory: results/
+Appending: 
+Seed: 123
+Upsample: FALSE
+Local Classifier per Node (LCN): 
+Skip level 2: TRUE
+    pmid abstract   target 
+       0        0        0 
+# A tibble: 21 × 2
+   target     n
+   <fct>  <int>
+ 1 CEA      207
+ 2 GLIO     139
+ 3 HER2     735
+ 4 LEU      611
+ 5 LEWIS    325
+ 6 MAA     1982
+ 7 MAGE     279
+ 8 MISC     578
+ 9 MUCIN    576
+10 MULTI    170
+# ℹ 11 more rows
+══ Workflow ════════════════════════════════════════════════════════════════════
+Preprocessor: Recipe
+Model: rand_forest()
+
+── Preprocessor ────────────────────────────────────────────────────────────────
+5 Recipe Steps
+
+• step_tokenize()
+• step_stopwords()
+• step_stem()
+• step_tokenfilter()
+• step_tfidf()
+
+── Model ───────────────────────────────────────────────────────────────────────
+Random Forest Model Specification (classification)
+
+Main Arguments:
+  mtry = tune()
+  trees = tune()
+  min_n = tune()
+
+Engine-Specific Arguments:
+  importance = impurity
+
+Computational engine: ranger 
+
+Number of cores: 10
+[1] "2023-11-29 08:44:48 CET"
