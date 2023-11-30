@@ -108,7 +108,7 @@ for (target in c("Cancer")) {
   # Submit trainig of model usage
   job_id <- submit(
     command = command,
-    runtime = 1440,
+    runtime = 1800,
     cores = 10,
     ram = 7,
     job_name = job_name,
