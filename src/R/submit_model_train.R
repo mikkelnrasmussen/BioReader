@@ -100,7 +100,7 @@ for (target in c("Cancer")) {
   command <- paste(
     "/usr/bin/time -v -o time/bioreader.time Rscript src/R/main_PRIAT.R -a",
     target,
-    "-p --hpc"
+    "-p --hpc -k"
   )
   job_name <- paste0("bioreader_", target)
   jobscript <- paste0("log/jobscript_", target)
