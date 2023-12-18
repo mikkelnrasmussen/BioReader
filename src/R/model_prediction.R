@@ -238,19 +238,3 @@ res <- classify_data(
   output_dir = opt$output,
   drop_model = opt$drop_model
 )
-
-# Read in articles
-articles <- read_csv(opt$input)
-
-# Join the results with the class labels
-res <- res |>
-  left_join(
-    articles,
-    by = join_by("pmid" == "PubMed_ID")
-  )
-
-# Read in articles
-articles <- read_csv(opt$input)
-
-# Save the results
-write_csv(res, here("data/test_articles_to_classify_with_labels.csv"))
