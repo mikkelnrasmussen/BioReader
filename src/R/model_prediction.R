@@ -152,8 +152,7 @@ category_predict <- function(model_dir, new_data, drop_model = FALSE) {
       # If level 1 class is the same as level 2 class, assign level 1 class
       # to level 2 class
       if (level_1_category %in% repeated_classes) {
-        new_data <- new_data |>
-          mutate(level_3 = as.character(level_1_category))
+        new_data[i, "level_2"] <- as.character(level_1_category)
       } else {
         new_data[i, "level_2"] <- load_and_predict(
           model_dir = model_dir,
@@ -188,8 +187,7 @@ category_predict <- function(model_dir, new_data, drop_model = FALSE) {
         } else if (level_2_category == "Other_Virus") {
           new_data[i, "level_3"] <- "OTV"
         } else {
-          new_data <- new_data |>
-            mutate(level_3 = as.character(level_2_category))
+          new_data[i, "level_3"] <- as.character(level_2_category)
         }
       } else {
         new_data[i, "level_3"] <- load_and_predict(
@@ -240,6 +238,9 @@ res <- classify_data(
   output_dir = opt$output,
   drop_model = opt$drop_model
 )
+
+# Read in articles
+articles <- read_csv(opt$input)
 
 # Join the results with the class labels
 res <- res |>
