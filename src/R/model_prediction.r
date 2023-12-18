@@ -28,6 +28,12 @@ option_list <- list(
     action = "store_true",
     default = FALSE,
     help = "Whether the script should print information [default: %default]"
+  ),
+  make_option(
+    c("-d", "--drop_model"),
+    action = "store_true",
+    default = FALSE,
+    help = "Whether the model should be dropped from memory after prediction [default: %default]"
   )
 )
 
@@ -43,10 +49,15 @@ if (opt$verbose) {
 
 
 # Helper function to load and predict with a model
-load_and_predict <- function(model_dir, category, new_data_row) {
+load_and_predict <- function(model_dir, category, new_data_row, drop_model = FALSE) {
   # Construct the model filename
   model_name <- paste0("model_fitted_on_entire_data_", category, ".rds")
   filename <- list.files(model_dir, full.names = TRUE) |> str_subset(model_name)
+
+  # Check if the model exists
+  if (length(filename) == 0) {
+    stop("Model for category ", category, " not found!")
+  }
 
   # Check if the model is already loaded
   model_variable <- paste0(category, "_model")
@@ -56,16 +67,46 @@ load_and_predict <- function(model_dir, category, new_data_row) {
     assign(model_variable, readRDS(filename), envir = globalenv())
   }
 
-  # Predict using the model
+  # Get the model
   model <- get(model_variable, envir = globalenv())
-  return(predict(model, new_data_row)$.pred_class)
+
+  # Predict using the model
+  prediction <- predict(model, new_data_row)$.pred_class
+
+  # Remove the model from memory
+  if (drop_model) {
+    rm(model, envir = globalenv())
+    rm(list = model_variable, envir = globalenv())
+  }
+
+  return(as.character(prediction))
 }
 
 # Main function for predicting the category of articles
-category_predict <- function(model_dir, new_data) {
+category_predict <- function(model_dir, new_data, drop_model = FALSE) {
   # Read in the class labels
   cat("R: Load class labels...", fill = TRUE)
   class_info <- read_csv(here("data/class_info.csv"))
+
+  # Find classes that are the same as in the category column
+  classes <- class_info |>
+    select(class) |>
+    unique() |>
+    pull()
+
+  categories <- class_info |>
+    select(category) |>
+    unique() |>
+    pull()
+
+  repeated_classes <- classes[(classes %in% categories)]
+
+  # Find cagesories that are the same as in the subcategory column
+  repeated_categories <- class_info |>
+    group_by(category) |>
+    summarise(n = n()) |>
+    filter(n == 1) |>
+    pull(category)
 
   # Load the level 1 classifier
   cat("R: Load level 1 model...", fill = TRUE)
@@ -83,7 +124,15 @@ category_predict <- function(model_dir, new_data) {
   # Classify articles according to level 1 model
   cat("R: Classifying articles according to level 1 model...", fill = TRUE)
   get("model_level_1", envir = globalenv())
-  new_data$level_1 <- predict(model_level_1, new_data)$.pred_class
+  new_data <- new_data |>
+    mutate(
+      level_1 = as.character(predict(model_level_1, new_data)$.pred_class)
+    )
+
+  # Remove the level 1 model from memory
+  if (drop_model) {
+    rm(model_level_1, envir = globalenv())
+  }
 
   # Classify articles according to level 2 models
   cat("R: Classifying articles according to level 2 models...")
@@ -100,11 +149,18 @@ category_predict <- function(model_dir, new_data) {
   for (i in seq_len(nrow(new_data))) {
     level_1_category <- new_data[i, "level_1"] |> pull(level_1)
     if (level_1_category %in% classes) {
-      # If level 1 class is the same as level 2 class, assign level 1 class to level 2 class
-      if (level_1_category %in% c("Cancer", "HIV", "Transplant")) {
-        new_data[i, "level_2"] <- level_1_category
+      # If level 1 class is the same as level 2 class, assign level 1 class
+      # to level 2 class
+      if (level_1_category %in% repeated_classes) {
+        new_data <- new_data |>
+          mutate(level_3 = as.character(level_1_category))
       } else {
-        new_data[i, "level_2"] <- load_and_predict(model_dir, level_1_category, new_data[i, ])
+        new_data[i, "level_2"] <- load_and_predict(
+          model_dir = model_dir,
+          category = level_1_category,
+          new_data_row = new_data[i, ],
+          drop_model = drop_model
+        )
       }
     }
   }
@@ -124,7 +180,25 @@ category_predict <- function(model_dir, new_data) {
   for (i in seq_len(nrow(new_data))) {
     level_2_category <- new_data[i, "level_2"] |> pull(level_2)
     if (level_2_category %in% categories) {
-      new_data[i, "level_3"] <- load_and_predict(model_dir, level_2_category, new_data[i, ])
+      # If level 2 class is the same as level 3 class, assign level 2 class
+      # to level 3 class
+      if (level_2_category %in% repeated_categories) {
+        if (level_2_category == "Other_Other") {
+          new_data[i, "level_3"] <- "OTOTAP"
+        } else if (level_2_category == "Other_Virus") {
+          new_data[i, "level_3"] <- "OTV"
+        } else {
+          new_data <- new_data |>
+            mutate(level_3 = as.character(level_2_category))
+        }
+      } else {
+        new_data[i, "level_3"] <- load_and_predict(
+          model_dir = model_dir,
+          category = level_2_category,
+          new_data_row = new_data[i, ],
+          drop_model = drop_model
+        )
+      }
     }
   }
 
@@ -135,19 +209,20 @@ category_predict <- function(model_dir, new_data) {
 #    data_path: str - gives path to csv file with articles to classify
 #    model_path: str - gives path to the directory where the models are located
 #    output_dir: str - gives path to the directory where the results are saved
-classify_data <- function(data_path, model_dir, output_dir) {
+classify_data <- function(data_path, model_dir, output_dir, drop_model = FALSE) {
   # Read the new articles from csv file
   cat("R: Load the articles...", fill = TRUE)
   new_data <- read_csv(data_path) |>
     rename(pmid = PubMed_ID, abstract = Abstract) |>
-    select(pmid, abstract) |>
-    slice(1:10)
+    select(pmid, abstract) #|>
+  # slice(1:10)
 
   # Perform prediction
   cat("R: Classifying the articles...", fill = TRUE)
   pred <- category_predict(
     model_dir = model_dir,
-    new_data = new_data
+    new_data = new_data,
+    drop_model = drop_model
   )
 
   cat("R: Articles classified!", fill = TRUE)
@@ -158,11 +233,20 @@ classify_data <- function(data_path, model_dir, output_dir) {
   return(pred)
 }
 
-opt$input <- "data/_raw/training_data/LEU.csv"
-
+# Classify the articles
 res <- classify_data(
   data_path = opt$input,
   model_dir = opt$model_dir,
-  output_dir = opt$output
+  output_dir = opt$output,
+  drop_model = opt$drop_model
 )
-View(class_info)
+
+# Join the results with the class labels
+res <- res |>
+  left_join(
+    articles,
+    by = join_by("pmid" == "PubMed_ID")
+  )
+
+# Save the results
+write_csv(res, here("data/test_articles_to_classify_with_labels.csv"))
