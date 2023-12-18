@@ -248,5 +248,8 @@ res <- res |>
     by = join_by("pmid" == "PubMed_ID")
   )
 
+# Read in articles
+articles <- read_csv(opt$input)
+
 # Save the results
 write_csv(res, here("data/test_articles_to_classify_with_labels.csv"))
