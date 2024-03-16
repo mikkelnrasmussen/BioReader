@@ -1,0 +1,32 @@
+Loaded dependency [R/4.3.1-mkl2023update1]: cmake/3.26.3
+Loaded dependency [R/4.3.1-mkl2023update1]: openjdk/11
+Loaded dependency [R/4.3.1-mkl2023update1]: gcc/12.3.0-binutils-2.40
+Loaded dependency [R/4.3.1-mkl2023update1]: intel/2023.1.0.mkl
+Loaded module: R/4.3.1-mkl2023update1
+
+Loading R/4.3.1-mkl2023update1
+  Loading requirement: cmake/3.26.3 openjdk/11 gcc/12.3.0-binutils-2.40
+    intel/2023.1.0.mkl
+Rows: 177 Columns: 3
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (2): Abstract, Abbreviation
+dbl (1): PubMed_ID
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Rows: 178 Columns: 8
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (8): Class, Category, Subcategory, Abbreviation, OK, class, category, su...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Rows: 177 Columns: 3
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (2): Abstract, Abbreviation
+dbl (1): PubMed_ID
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
